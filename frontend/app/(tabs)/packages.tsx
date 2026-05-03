@@ -1,38 +1,82 @@
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, FlatList, Text } from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 
-import { Card, EmptyState, Screen, Subtitle, Title } from '@/components/yatara/ui';
-import { Colors } from '@/constants/theme';
+import { EmptyState, ImageCard, Screen, SectionHeader, Tag } from '@/components/yatara/ui';
+import { HeroImages } from '@/constants/images';
+import { Colors, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { PackageItem } from '@/lib/types';
 
 export default function PackagesScreen() {
   const [items, setItems] = useState<PackageItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.get('/packages?public=true')
       .then((response) => setItems(response.data.data))
-      .catch((error) => Alert.alert('Could not load packages', getApiError(error)));
+      .catch((error) => Alert.alert('Could not load packages', getApiError(error)))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
     <Screen>
-      <Title>Packages</Title>
-      <Subtitle>API-backed tour packages from the Express backend.</Subtitle>
+      <SectionHeader
+        title="Tour Packages"
+        subtitle={`${items.length} curated journeys`}
+      />
       <FlatList
         data={items}
         keyExtractor={(item) => item._id}
-        ListEmptyComponent={<EmptyState text="No packages found." />}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 30 }}
+        ListEmptyComponent={
+          loading ? null : <EmptyState text="No packages found." />
+        }
         renderItem={({ item }) => (
-          <Card>
-            <Text style={{ color: Colors.deepEmerald, fontSize: 18, fontWeight: '900' }}>{item.title}</Text>
-            <Text style={{ color: Colors.muted, marginVertical: 6 }}>{item.duration} • LKR {item.priceMin?.toLocaleString()}</Text>
-            <Text style={{ color: Colors.ink }}>{item.summary}</Text>
-            <Link href={`/packages/${item._id}`} style={{ color: Colors.deepEmerald, fontWeight: '900', marginTop: 12 }}>Details and booking</Link>
-          </Card>
+          <ImageCard
+            image={
+              item.images?.[0]
+                ? { uri: item.images[0] }
+                : HeroImages.dawn
+            }
+            title={item.title}
+            subtitle={`${item.duration} · LKR ${item.priceMin?.toLocaleString()}`}
+            badge={item.style || 'Package'}
+            height={210}
+            onPress={() => router.push(`/packages/${item._id}`)}
+          >
+            {item.highlights && item.highlights.length > 0 ? (
+              <View style={s.tagRow}>
+                {item.highlights.slice(0, 3).map((h) => (
+                  <View key={h} style={s.pill}>
+                    <Text style={s.pillText}>{h}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </ImageCard>
         )}
       />
     </Screen>
   );
 }
+
+const s = StyleSheet.create({
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+    gap: 6,
+  },
+  pill: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  pillText: {
+    color: 'rgba(255,255,255,0.9)',
+    ...Typography.tiny,
+  },
+});

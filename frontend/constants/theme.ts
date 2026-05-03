@@ -1,14 +1,30 @@
 const palette = {
   deepEmerald: '#063f32',
   emerald: '#0f5a47',
+  emeraldLight: '#1a7a62',
   antiqueGold: '#d4af37',
+  goldLight: '#e8cc6e',
+  goldDark: '#b8960e',
   offWhite: '#f8f4ea',
+  cream: '#faf7f0',
   ink: '#10201b',
   muted: '#69736f',
+  mutedLight: '#9ca5a0',
   white: '#ffffff',
   danger: '#b42318',
+  dangerLight: '#fef3f2',
   success: '#167a45',
+  successLight: '#ecfdf3',
+  warning: '#dc6803',
+  warningLight: '#fffaeb',
+  info: '#1570ef',
+  infoLight: '#eff8ff',
   border: '#e7dfce',
+  borderLight: '#f0eadb',
+  overlay: 'rgba(6, 63, 50, 0.65)',
+  overlayDark: 'rgba(6, 63, 50, 0.85)',
+  overlayLight: 'rgba(6, 63, 50, 0.35)',
+  cardShadow: 'rgba(6, 63, 50, 0.08)',
 };
 
 export const Colors = {
@@ -31,14 +47,70 @@ export const Colors = {
   },
 };
 
+export const Typography = {
+  hero: { fontSize: 36, fontWeight: '900' as const, lineHeight: 42, letterSpacing: -0.5 },
+  h1: { fontSize: 30, fontWeight: '800' as const, lineHeight: 36, letterSpacing: -0.3 },
+  h2: { fontSize: 24, fontWeight: '800' as const, lineHeight: 30 },
+  h3: { fontSize: 20, fontWeight: '700' as const, lineHeight: 26 },
+  h4: { fontSize: 17, fontWeight: '700' as const, lineHeight: 22 },
+  body: { fontSize: 15, fontWeight: '400' as const, lineHeight: 22 },
+  bodyBold: { fontSize: 15, fontWeight: '700' as const, lineHeight: 22 },
+  caption: { fontSize: 13, fontWeight: '500' as const, lineHeight: 18 },
+  captionBold: { fontSize: 13, fontWeight: '700' as const, lineHeight: 18 },
+  overline: { fontSize: 11, fontWeight: '800' as const, lineHeight: 14, letterSpacing: 1.2, textTransform: 'uppercase' as const },
+  tiny: { fontSize: 10, fontWeight: '600' as const, lineHeight: 13 },
+};
+
+export const Shadows = {
+  sm: {
+    shadowColor: palette.cardShadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: palette.cardShadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  lg: {
+    shadowColor: palette.cardShadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  gold: {
+    shadowColor: 'rgba(212, 175, 55, 0.25)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+};
+
 export const Theme = {
   colors: Colors,
+  typography: Typography,
+  shadows: Shadows,
   radius: {
+    xs: 6,
     sm: 8,
     md: 12,
     lg: 18,
+    xl: 24,
+    full: 999,
   },
   spacing: {
+    xs: 4,
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 20,
+    xxl: 28,
     screen: 20,
   },
 };

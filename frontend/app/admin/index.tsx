@@ -1,15 +1,30 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, Text } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { BookOpen, CalendarDays, Car, MapPin, Users } from 'lucide-react-native';
 
-import { Button, Card, Screen, Subtitle, Title } from '@/components/yatara/ui';
-import { Colors } from '@/constants/theme';
+import { Card, EmptyState, Screen, SectionHeader } from '@/components/yatara/ui';
+import { Colors, Shadows, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 
+const MODULES = [
+  { key: 'packages', label: 'Packages', icon: BookOpen, route: '/admin/packages', color: '#1a7a62' },
+  { key: 'bookings', label: 'Bookings', icon: CalendarDays, route: '/admin/bookings', color: '#d4af37' },
+  { key: 'vehicles', label: 'Vehicles', icon: Car, route: '/admin/vehicles', color: '#1570ef' },
+  { key: 'destinations', label: 'Destinations', icon: MapPin, route: '/admin/destinations', color: '#dc6803' },
+  { key: 'partners', label: 'Partners', icon: Users, route: '/admin/partners', color: '#b42318' },
+];
+
 export default function AdminDashboardScreen() {
   const { isAdmin } = useAuth();
-  const [counts, setCounts] = useState({ packages: 0, bookings: 0, vehicles: 0, destinations: 0, partners: 0 });
+  const [counts, setCounts] = useState<Record<string, number>>({
+    packages: 0,
+    bookings: 0,
+    vehicles: 0,
+    destinations: 0,
+    partners: 0,
+  });
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -39,8 +54,7 @@ export default function AdminDashboardScreen() {
   if (!isAdmin) {
     return (
       <Screen>
-        <Title>Admin Dashboard</Title>
-        <Subtitle>This area is only for admin and staff accounts.</Subtitle>
+        <EmptyState text="This area is only for admin and staff accounts." />
       </Screen>
     );
   }
@@ -48,20 +62,97 @@ export default function AdminDashboardScreen() {
   return (
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Title>Admin Dashboard</Title>
-        <Subtitle>Assignment CRUD modules connected to Express API.</Subtitle>
-        {Object.entries(counts).map(([label, value]) => (
-          <Card key={label}>
-            <Text style={{ color: Colors.muted, textTransform: 'uppercase', fontWeight: '800' }}>{label}</Text>
-            <Text style={{ color: Colors.deepEmerald, fontSize: 30, fontWeight: '900' }}>{value}</Text>
-          </Card>
-        ))}
-        <Button title="Manage Packages" onPress={() => router.push('/admin/packages')} />
-        <Button title="Manage Bookings" onPress={() => router.push('/admin/bookings')} />
-        <Button title="Manage Vehicles" onPress={() => router.push('/admin/vehicles')} />
-        <Button title="Manage Destinations" onPress={() => router.push('/admin/destinations')} />
-        <Button title="Manage Partners" onPress={() => router.push('/admin/partners')} />
+        <SectionHeader title="Admin Dashboard" subtitle="Manage all CRUD modules" />
+
+        {/* Stats grid */}
+        <View style={s.statsGrid}>
+          {MODULES.map((mod) => {
+            const Icon = mod.icon;
+            return (
+              <Pressable
+                key={mod.key}
+                style={({ pressed }) => [
+                  s.statCard,
+                  Shadows.sm,
+                  pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+                ]}
+                onPress={() => router.push(mod.route as any)}>
+                <View style={[s.iconWrap, { backgroundColor: mod.color + '15' }]}>
+                  <Icon size={20} color={mod.color} />
+                </View>
+                <Text style={s.statValue}>{counts[mod.key] ?? 0}</Text>
+                <Text style={s.statLabel}>{mod.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {/* Management links */}
+        <SectionHeader title="Quick Access" />
+        {MODULES.map((mod) => {
+          const Icon = mod.icon;
+          return (
+            <Pressable
+              key={mod.key}
+              style={({ pressed }) => [pressed && { opacity: 0.9 }]}
+              onPress={() => router.push(mod.route as any)}>
+              <Card style={s.linkCard}>
+                <View style={s.linkRow}>
+                  <View style={[s.linkIcon, { backgroundColor: mod.color + '15' }]}>
+                    <Icon size={18} color={mod.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.linkTitle}>Manage {mod.label}</Text>
+                    <Text style={s.linkSub}>{counts[mod.key]} records</Text>
+                  </View>
+                  <Text style={s.linkArrow}>›</Text>
+                </View>
+              </Card>
+            </Pressable>
+          );
+        })}
+        <View style={{ height: 30 }} />
       </ScrollView>
     </Screen>
   );
 }
+
+const s = StyleSheet.create({
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 8,
+  },
+  statCard: {
+    width: '48%',
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    gap: 6,
+    flexGrow: 1,
+    minWidth: 140,
+  },
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statValue: { color: Colors.deepEmerald, ...Typography.h1, fontSize: 32 },
+  statLabel: { color: Colors.muted, ...Typography.tiny, textTransform: 'uppercase', letterSpacing: 0.8 },
+  linkCard: { marginBottom: 8 },
+  linkRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  linkIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  linkTitle: { color: Colors.deepEmerald, ...Typography.bodyBold },
+  linkSub: { color: Colors.muted, ...Typography.tiny, marginTop: 2 },
+  linkArrow: { color: Colors.muted, fontSize: 24, fontWeight: '300' },
+});

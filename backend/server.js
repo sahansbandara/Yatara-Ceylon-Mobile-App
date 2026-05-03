@@ -5,6 +5,7 @@ const morgan = require('morgan');
 require('dotenv').config();
 
 const connectDB = require('./config/db');
+const User = require('./models/User');
 const authRoutes = require('./routes/auth.routes');
 const packageRoutes = require('./routes/package.routes');
 const bookingRoutes = require('./routes/booking.routes');
@@ -15,10 +16,27 @@ const partnerRoutes = require('./routes/partner.routes');
 const app = express();
 const port = process.env.PORT || 5000;
 
-connectDB().catch((error) => {
-  console.error(error.message || error);
-  process.exit(1);
-});
+connectDB()
+  .then(async () => {
+    // Auto-promote seed accounts to correct roles on startup
+    try {
+      await User.findOneAndUpdate(
+        { email: 'admin@yataraceylon.com', isDeleted: { $ne: true } },
+        { role: 'ADMIN' }
+      );
+      await User.findOneAndUpdate(
+        { email: 'staff@yataraceylon.com', isDeleted: { $ne: true } },
+        { role: 'STAFF' }
+      );
+      console.log('Seed account roles verified');
+    } catch (e) {
+      console.log('Role promotion skipped:', e.message);
+    }
+  })
+  .catch((error) => {
+    console.error(error.message || error);
+    process.exit(1);
+  });
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN === '*' || !process.env.CORS_ORIGIN
