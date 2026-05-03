@@ -1,0 +1,115 @@
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+
+import { Button, Card, Field, SectionHeader } from '@/components/yatara/ui';
+import { HeroImages } from '@/constants/images';
+import { Colors, Typography } from '@/constants/theme';
+import { api, getApiError } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+
+export default function BuildTourScreen() {
+  const { user } = useAuth();
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState('');
+  const [pax, setPax] = useState('2');
+  const [dateFrom, setDateFrom] = useState(new Date().toISOString().slice(0, 10));
+  const [dateTo, setDateTo] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 5);
+    return d.toISOString().slice(0, 10);
+  });
+  const [pickupLocation, setPickupLocation] = useState('');
+  const [interests, setInterests] = useState('');
+  const [budget, setBudget] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function submit() {
+    if (!name.trim()) {
+      Alert.alert('Required', 'Enter your name.');
+      return;
+    }
+    if (phone.trim().length < 7) {
+      Alert.alert('Required', 'Enter a valid phone number.');
+      return;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateFrom) || !/^\d{4}-\d{2}-\d{2}$/.test(dateTo)) {
+      Alert.alert('Invalid date', 'Use YYYY-MM-DD format for both dates.');
+      return;
+    }
+    if (!Number.isFinite(Number(pax)) || Number(pax) < 1) {
+      Alert.alert('Required', 'Guest count must be at least 1.');
+      return;
+    }
+    if (!pickupLocation.trim()) {
+      Alert.alert('Required', 'Enter a pickup location.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await api.post('/bookings', {
+        type: 'CUSTOM',
+        customerName: name,
+        phone,
+        pax: Number(pax),
+        dateFrom,
+        dateTo,
+        pickupLocation,
+        notes: `Custom tour request. Interests: ${interests || 'Not specified'}. Budget: ${budget || 'Not specified'}.`,
+      });
+      Alert.alert('Tour Request Sent', 'Your custom tour request is now visible in My Bookings.');
+      router.replace('/(tabs)/bookings');
+    } catch (error) {
+      Alert.alert('Request failed', getApiError(error));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <View style={s.container}>
+      <View style={s.headerWrap}>
+        <Image source={HeroImages.dusk} style={s.headerImage} resizeMode="cover" />
+        <LinearGradient
+          colors={['rgba(6,63,50,0.25)', Colors.offWhite]}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <View style={s.headerContent}>
+          <Text style={s.headerTitle}>Build Your Tour</Text>
+          <Text style={s.headerSub}>Send a simple custom itinerary request to the team.</Text>
+        </View>
+      </View>
+
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={s.formArea} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <SectionHeader title="Custom Request" subtitle="Staff can review this from bookings" />
+          <Card>
+            <Field label="Your Name" value={name} onChangeText={setName} placeholder="Full name" />
+            <Field label="Phone Number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+94 77 123 4567" />
+            <Field label="Number of Guests" value={pax} onChangeText={setPax} keyboardType="numeric" placeholder="2" />
+            <Field label="Travel Start Date (YYYY-MM-DD)" value={dateFrom} onChangeText={setDateFrom} placeholder="2026-06-15" />
+            <Field label="Travel End Date (YYYY-MM-DD)" value={dateTo} onChangeText={setDateTo} placeholder="2026-06-20" />
+            <Field label="Pickup Location" value={pickupLocation} onChangeText={setPickupLocation} placeholder="Airport, hotel, or city" />
+            <Field label="Interests" value={interests} onChangeText={setInterests} multiline placeholder="Wildlife, beaches, heritage, wellness" />
+            <Field label="Budget Range" value={budget} onChangeText={setBudget} placeholder="Example: LKR 250,000" />
+          </Card>
+
+          <Button title="Submit Custom Tour" onPress={submit} loading={loading} />
+          <View style={{ height: 30 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.offWhite },
+  headerWrap: { height: 190, justifyContent: 'flex-end' },
+  headerImage: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' },
+  headerContent: { padding: 22, paddingBottom: 18 },
+  headerTitle: { color: Colors.white, ...Typography.h1, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
+  headerSub: { color: 'rgba(255,255,255,0.86)', ...Typography.caption, marginTop: 4 },
+  formArea: { padding: 20 },
+});

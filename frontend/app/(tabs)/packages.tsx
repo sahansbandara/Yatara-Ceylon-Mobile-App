@@ -1,24 +1,24 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, ImageSourcePropType, StyleSheet, Text, View } from 'react-native';
 
-import { EmptyState, ImageCard, Screen, SectionHeader, Tag } from '@/components/yatara/ui';
+import { EmptyState, ImageCard, Screen, SectionHeader } from '@/components/yatara/ui';
 import { CategoryImages, HeroImages } from '@/constants/images';
-import { Colors, Typography } from '@/constants/theme';
-
-const STYLE_IMAGE: Record<string, any> = {
-  heritage:    CategoryImages.heritage,
-  cultural:    CategoryImages.heritage,
-  wildlife:    CategoryImages.wildlife,
-  adventure:   CategoryImages.adventure,
-  wellness:    CategoryImages.ayurveda,
-  luxury:      HeroImages.dusk,
-  beach:       CategoryImages.coastal,
-  marine:      CategoryImages.coastal,
-  hillcountry: CategoryImages.hillCountry,
-};
+import { Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { PackageItem } from '@/lib/types';
+
+const STYLE_IMAGE: Record<string, ImageSourcePropType> = {
+  heritage: CategoryImages.heritage,
+  cultural: CategoryImages.heritage,
+  wildlife: CategoryImages.wildlife,
+  adventure: CategoryImages.adventure,
+  wellness: CategoryImages.ayurveda,
+  luxury: HeroImages.dusk,
+  beach: CategoryImages.coastal,
+  marine: CategoryImages.coastal,
+  hillcountry: CategoryImages.hillCountry,
+};
 
 export default function PackagesScreen() {
   const [items, setItems] = useState<PackageItem[]>([]);

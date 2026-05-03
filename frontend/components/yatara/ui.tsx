@@ -233,7 +233,6 @@ export function Button({
   icon?: ReactNode;
   fullWidth?: boolean;
 }) {
-  const isPrimary = variant === 'primary';
   const isGold = variant === 'gold';
   const isSecondary = variant === 'secondary';
   const isDanger = variant === 'danger';

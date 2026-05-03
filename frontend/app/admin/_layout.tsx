@@ -25,7 +25,6 @@ export default function AdminLayout() {
         headerStyle: { backgroundColor: Colors.deepEmerald },
         headerTintColor: Colors.white,
         headerTitleStyle: { fontWeight: '800' },
-        headerBackTitleVisible: false,
       }}>
       <Stack.Screen
         name="index"

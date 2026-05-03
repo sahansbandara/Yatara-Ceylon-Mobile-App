@@ -1,25 +1,25 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Alert, Image, ImageSourcePropType, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Card, Divider, EmptyState, Screen, Tag } from '@/components/yatara/ui';
+import { Card, EmptyState, Screen } from '@/components/yatara/ui';
 import { CategoryImages, HeroImages } from '@/constants/images';
-
-const STYLE_IMAGE: Record<string, any> = {
-  heritage:    CategoryImages.heritage,
-  cultural:    CategoryImages.heritage,
-  wildlife:    CategoryImages.wildlife,
-  adventure:   CategoryImages.adventure,
-  wellness:    CategoryImages.ayurveda,
-  luxury:      HeroImages.dusk,
-  beach:       CategoryImages.coastal,
-  marine:      CategoryImages.coastal,
-  hillcountry: CategoryImages.hillCountry,
-};
 import { Colors, Shadows, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { PackageItem } from '@/lib/types';
+
+const STYLE_IMAGE: Record<string, ImageSourcePropType> = {
+  heritage: CategoryImages.heritage,
+  cultural: CategoryImages.heritage,
+  wildlife: CategoryImages.wildlife,
+  adventure: CategoryImages.adventure,
+  wellness: CategoryImages.ayurveda,
+  luxury: HeroImages.dusk,
+  beach: CategoryImages.coastal,
+  marine: CategoryImages.coastal,
+  hillcountry: CategoryImages.hillCountry,
+};
 
 export default function PackageDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

@@ -1,6 +1,6 @@
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, FlatList, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Image, ImageSourcePropType, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import {
   Button,
@@ -13,22 +13,22 @@ import {
   Screen,
 } from '@/components/yatara/ui';
 import { CategoryImages, DestinationImages, HeroImages, TOUR_CATEGORIES } from '@/constants/images';
-
-const STYLE_IMAGE: Record<string, any> = {
-  heritage:    CategoryImages.heritage,
-  cultural:    CategoryImages.heritage,
-  wildlife:    CategoryImages.wildlife,
-  adventure:   CategoryImages.adventure,
-  wellness:    CategoryImages.ayurveda,
-  luxury:      HeroImages.dusk,
-  beach:       CategoryImages.coastal,
-  marine:      CategoryImages.coastal,
-  hillcountry: CategoryImages.hillCountry,
-};
 import { Colors, Shadows, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { Destination, PackageItem } from '@/lib/types';
+
+const STYLE_IMAGE: Record<string, ImageSourcePropType> = {
+  heritage: CategoryImages.heritage,
+  cultural: CategoryImages.heritage,
+  wildlife: CategoryImages.wildlife,
+  adventure: CategoryImages.adventure,
+  wellness: CategoryImages.ayurveda,
+  luxury: HeroImages.dusk,
+  beach: CategoryImages.coastal,
+  marine: CategoryImages.coastal,
+  hillcountry: CategoryImages.hillCountry,
+};
 
 export default function HomeScreen() {
   const { user, isAdmin } = useAuth();

@@ -1,8 +1,0 @@
-PORT=5000
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/yatara-mobile
-MOBILE_DB_NAME=yatara-mobile
-REQUIRE_MOBILE_DB=true
-JWT_SECRET=replace-with-a-long-random-secret
-JWT_EXPIRES_IN=7d
-CORS_ORIGIN=*
-PUBLIC_API_URL=http://localhost:5000
