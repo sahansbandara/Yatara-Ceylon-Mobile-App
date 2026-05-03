@@ -1,13 +1,11 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, Text } from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 
-import { Button, Card, Screen, Subtitle, Title } from '@/components/yatara/ui';
-import { Colors } from '@/constants/theme';
+import { Button, Card, Divider, Screen, SectionHeader, StatusBadge } from '@/components/yatara/ui';
+import { Colors, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { Booking } from '@/lib/types';
-
-const statuses = ['CONFIRMED', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
 
 export default function ManageBookingsScreen() {
   const [items, setItems] = useState<Booking[]>([]);
@@ -18,27 +16,106 @@ export default function ManageBookingsScreen() {
 
   useFocusEffect(load);
 
-  async function update(id: string, status: string) {
-    await api.put(`/bookings/${id}/status`, { status });
-    load();
+  async function setStatus(id: string, status: string) {
+    try {
+      await api.put(`/bookings/${id}/status`, { status });
+      load();
+    } catch (error) {
+      Alert.alert('Update failed', getApiError(error));
+    }
   }
 
   return (
     <Screen>
-      <Title>Manage Bookings</Title>
-      <Subtitle>Member 3 booking status workflow.</Subtitle>
+      <SectionHeader title="Manage Bookings" subtitle={`${items.length} total bookings`} />
       <FlatList
         data={items}
         keyExtractor={(item) => item._id}
-        renderItem={({ item, index }) => (
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        renderItem={({ item }) => (
           <Card>
-            <Text style={{ color: Colors.deepEmerald, fontWeight: '900' }}>{item.bookingNo}</Text>
-            <Text style={{ color: Colors.ink }}>{item.customerName} • {item.packageId?.title || item.type}</Text>
-            <Text style={{ color: Colors.antiqueGold, fontWeight: '900', marginTop: 6 }}>{item.status}</Text>
-            <Button title={`Set ${statuses[index % statuses.length]}`} onPress={() => update(item._id, statuses[index % statuses.length])} />
+            <View style={s.headerRow}>
+              <View style={s.bookingNoWrap}>
+                <Text style={s.bookingNo}>{item.bookingNo}</Text>
+              </View>
+              <StatusBadge status={item.status} />
+            </View>
+
+            <Divider />
+
+            <Text style={s.packageTitle}>
+              {item.packageId?.title || 'Custom Tour Request'}
+            </Text>
+            <Text style={s.customerName}>
+              👤 {item.customerName || 'Unknown Customer'}
+            </Text>
+
+            <View style={s.detailsRow}>
+              <View style={s.detailItem}>
+                <Text style={s.detailLabel}>Pax</Text>
+                <Text style={s.detailValue}>{item.pax}</Text>
+              </View>
+              <View style={s.detailItem}>
+                <Text style={s.detailLabel}>From Date</Text>
+                <Text style={s.detailValue}>
+                  {new Date(item.dates?.from || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                </Text>
+              </View>
+              <View style={s.detailItem}>
+                <Text style={s.detailLabel}>Total</Text>
+                <Text style={[s.detailValue, { color: Colors.antiqueGold }]}>
+                  {item.totalCost ? `LKR ${item.totalCost.toLocaleString()}` : 'TBD'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Status action buttons */}
+            {item.status !== 'COMPLETED' && item.status !== 'CANCELLED' ? (
+              <View style={s.statusButtons}>
+                {item.status === 'NEW' ? (
+                  <Button
+                    title="Confirm"
+                    onPress={() => setStatus(item._id, 'CONFIRMED')}
+                    fullWidth={false}
+                  />
+                ) : null}
+                {item.status === 'CONFIRMED' ? (
+                  <Button
+                    title="Complete"
+                    onPress={() => setStatus(item._id, 'COMPLETED')}
+                    fullWidth={false}
+                  />
+                ) : null}
+                <Button
+                  title="Cancel"
+                  variant="danger"
+                  onPress={() =>
+                    Alert.alert('Cancel Booking', 'Mark this booking as cancelled?', [
+                      { text: 'No' },
+                      { text: 'Yes', style: 'destructive', onPress: () => setStatus(item._id, 'CANCELLED') },
+                    ])
+                  }
+                  fullWidth={false}
+                />
+              </View>
+            ) : null}
           </Card>
         )}
       />
     </Screen>
   );
 }
+
+const s = StyleSheet.create({
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  bookingNoWrap: { backgroundColor: Colors.offWhite, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
+  bookingNo: { color: Colors.deepEmerald, ...Typography.captionBold, letterSpacing: 0.5 },
+  packageTitle: { color: Colors.ink, ...Typography.h4, marginBottom: 4 },
+  customerName: { color: Colors.muted, ...Typography.caption, marginBottom: 12 },
+  detailsRow: { flexDirection: 'row', gap: 16 },
+  detailItem: { flex: 1 },
+  detailLabel: { color: Colors.muted, ...Typography.tiny, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 3 },
+  detailValue: { color: Colors.deepEmerald, ...Typography.captionBold },
+  statusButtons: { flexDirection: 'row', gap: 10, marginTop: 16, flexWrap: 'wrap' },
+});

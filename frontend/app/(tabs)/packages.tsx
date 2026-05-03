@@ -3,8 +3,20 @@ import { useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { EmptyState, ImageCard, Screen, SectionHeader, Tag } from '@/components/yatara/ui';
-import { HeroImages } from '@/constants/images';
+import { CategoryImages, HeroImages } from '@/constants/images';
 import { Colors, Typography } from '@/constants/theme';
+
+const STYLE_IMAGE: Record<string, any> = {
+  heritage:    CategoryImages.heritage,
+  cultural:    CategoryImages.heritage,
+  wildlife:    CategoryImages.wildlife,
+  adventure:   CategoryImages.adventure,
+  wellness:    CategoryImages.ayurveda,
+  luxury:      HeroImages.dusk,
+  beach:       CategoryImages.coastal,
+  marine:      CategoryImages.coastal,
+  hillcountry: CategoryImages.hillCountry,
+};
 import { api, getApiError } from '@/lib/api';
 import { PackageItem } from '@/lib/types';
 
@@ -38,7 +50,7 @@ export default function PackagesScreen() {
             image={
               item.images?.[0]
                 ? { uri: item.images[0] }
-                : HeroImages.dawn
+                : (STYLE_IMAGE[item.style?.toLowerCase() ?? ''] ?? HeroImages.dawn)
             }
             title={item.title}
             subtitle={`${item.duration} · LKR ${item.priceMin?.toLocaleString()}`}

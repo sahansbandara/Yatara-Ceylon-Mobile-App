@@ -4,7 +4,19 @@ import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { Card, Divider, EmptyState, Screen, Tag } from '@/components/yatara/ui';
-import { HeroImages } from '@/constants/images';
+import { CategoryImages, HeroImages } from '@/constants/images';
+
+const STYLE_IMAGE: Record<string, any> = {
+  heritage:    CategoryImages.heritage,
+  cultural:    CategoryImages.heritage,
+  wildlife:    CategoryImages.wildlife,
+  adventure:   CategoryImages.adventure,
+  wellness:    CategoryImages.ayurveda,
+  luxury:      HeroImages.dusk,
+  beach:       CategoryImages.coastal,
+  marine:      CategoryImages.coastal,
+  hillcountry: CategoryImages.hillCountry,
+};
 import { Colors, Shadows, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { PackageItem } from '@/lib/types';
@@ -28,7 +40,9 @@ export default function PackageDetailsScreen() {
     );
   }
 
-  const heroImage = item.images?.[0] ? { uri: item.images[0] } : HeroImages.dawn;
+  const heroImage = item.images?.[0]
+    ? { uri: item.images[0] }
+    : (STYLE_IMAGE[item.style?.toLowerCase() ?? ''] ?? HeroImages.dawn);
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.offWhite }}>

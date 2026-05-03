@@ -1,13 +1,23 @@
-import { router } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, router } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
 
 import { Button, Card, Divider, Screen, SectionHeader } from '@/components/yatara/ui';
 import { Colors, Shadows, Typography } from '@/constants/theme';
-import { API_URL } from '@/lib/api';
+import { API_URL, api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 
 export default function ProfileScreen() {
   const { user, logout, isAdmin } = useAuth();
+  const [bookingCount, setBookingCount] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      api.get('/bookings/my').then((res) => {
+        setBookingCount(res.data.data.length);
+      }).catch(() => {});
+    }, [])
+  );
 
   async function signOut() {
     await logout();
@@ -25,57 +35,77 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
-      <SectionHeader title="Profile" subtitle="Account & environment" />
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <SectionHeader title="My Dashboard" subtitle="Manage your account & bookings" />
 
-      {/* Avatar & info */}
-      <Card>
-        <View style={s.profileRow}>
-          <View style={s.avatar}>
-            <Text style={s.avatarText}>{initials}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={s.userName}>{user?.name}</Text>
-            <Text style={s.userEmail}>{user?.email}</Text>
-            <View style={s.roleBadge}>
-              <Text style={s.roleText}>{user?.role}</Text>
+        {/* Avatar & info */}
+        <Card>
+          <View style={s.profileRow}>
+            <View style={s.avatar}>
+              <Text style={s.avatarText}>{initials}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.userName}>{user?.name}</Text>
+              <Text style={s.userEmail}>{user?.email}</Text>
+              <View style={s.roleBadge}>
+                <Text style={s.roleText}>{user?.role}</Text>
+              </View>
             </View>
           </View>
-        </View>
-      </Card>
+        </Card>
 
-      {/* Environment card */}
-      <Card>
-        <Text style={s.envLabel}>API ENDPOINT</Text>
-        <Text style={s.envValue}>{API_URL}</Text>
-        <Divider />
-        <Text style={s.envLabel}>APP VERSION</Text>
-        <Text style={s.envValue}>Yatara Ceylon Mobile v1.0.0</Text>
-        <Divider />
-        <Text style={s.envLabel}>PLATFORM</Text>
-        <Text style={s.envValue}>Expo React Native · SDK 54</Text>
-      </Card>
+        {/* Quick Stats */}
+        <SectionHeader title="Overview" />
+        <View style={s.statsRow}>
+          <View style={[s.statCard, Shadows.sm]}>
+            <Text style={s.statValue}>{bookingCount}</Text>
+            <Text style={s.statLabel}>Total Bookings</Text>
+          </View>
+          <View style={[s.statCard, Shadows.sm]}>
+            <Text style={s.statValue}>1</Text>
+            <Text style={s.statLabel}>Saved Plans</Text>
+          </View>
+        </View>
 
-      {/* Quick Stats */}
-      <View style={s.statsRow}>
-        <View style={[s.statCard, Shadows.sm]}>
-          <Text style={s.statEmoji}>📋</Text>
-          <Text style={s.statLabel}>Bookings</Text>
+        {/* Dashboard Actions */}
+        <SectionHeader title="Quick Actions" />
+        <View style={{ gap: 10, marginBottom: 20 }}>
+          <Button
+            title="View My Bookings"
+            variant="secondary"
+            onPress={() => router.push('/(tabs)/bookings')}
+          />
+          <Button
+            title="Browse Packages"
+            variant="secondary"
+            onPress={() => router.push('/(tabs)/packages')}
+          />
         </View>
-        <View style={[s.statCard, Shadows.sm]}>
-          <Text style={s.statEmoji}>🗺️</Text>
-          <Text style={s.statLabel}>Journeys</Text>
-        </View>
-        <View style={[s.statCard, Shadows.sm]}>
-          <Text style={s.statEmoji}>⭐</Text>
-          <Text style={s.statLabel}>Reviews</Text>
-        </View>
-      </View>
 
-      {/* Actions */}
-      {isAdmin ? (
-        <Button title="Admin Dashboard" variant="secondary" onPress={() => router.push('/admin')} />
-      ) : null}
-      <Button title="Sign Out" variant="danger" onPress={signOut} />
+        {/* Environment card */}
+        <SectionHeader title="System Info" />
+        <Card>
+          <Text style={s.envLabel}>API ENDPOINT</Text>
+          <Text style={s.envValue}>{API_URL}</Text>
+          <Divider />
+          <Text style={s.envLabel}>APP VERSION</Text>
+          <Text style={s.envValue}>Yatara Ceylon Mobile v1.0.0</Text>
+          <Divider />
+          <Text style={s.envLabel}>PLATFORM</Text>
+          <Text style={s.envValue}>Expo React Native · SDK 54</Text>
+        </Card>
+
+        <View style={{ height: 20 }} />
+
+        {/* Actions */}
+        {isAdmin ? (
+          <Button title="Open Admin Dashboard" variant="gold" onPress={() => router.push('/admin')} />
+        ) : null}
+        <View style={{ height: 10 }} />
+        <Button title="Sign Out" variant="danger" onPress={signOut} />
+        
+        <View style={{ height: 40 }} />
+      </ScrollView>
     </Screen>
   );
 }
@@ -118,15 +148,15 @@ const s = StyleSheet.create({
     color: Colors.deepEmerald,
     ...Typography.captionBold,
   },
-  statsRow: { flexDirection: 'row', gap: 10, marginTop: 4, marginBottom: 4 },
+  statsRow: { flexDirection: 'row', gap: 10, marginTop: 4, marginBottom: 10 },
   statCard: {
     flex: 1,
     backgroundColor: Colors.white,
     borderRadius: 14,
-    padding: 14,
+    padding: 16,
     alignItems: 'center',
     gap: 4,
   },
-  statEmoji: { fontSize: 22 },
-  statLabel: { color: Colors.muted, ...Typography.tiny },
+  statValue: { color: Colors.deepEmerald, ...Typography.h2, fontWeight: '800' },
+  statLabel: { color: Colors.muted, ...Typography.captionBold },
 });

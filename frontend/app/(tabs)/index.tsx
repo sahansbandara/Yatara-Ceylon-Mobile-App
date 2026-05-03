@@ -12,7 +12,19 @@ import {
   SectionHeader,
   Screen,
 } from '@/components/yatara/ui';
-import { DestinationImages, HeroImages, TOUR_CATEGORIES } from '@/constants/images';
+import { CategoryImages, DestinationImages, HeroImages, TOUR_CATEGORIES } from '@/constants/images';
+
+const STYLE_IMAGE: Record<string, any> = {
+  heritage:    CategoryImages.heritage,
+  cultural:    CategoryImages.heritage,
+  wildlife:    CategoryImages.wildlife,
+  adventure:   CategoryImages.adventure,
+  wellness:    CategoryImages.ayurveda,
+  luxury:      HeroImages.dusk,
+  beach:       CategoryImages.coastal,
+  marine:      CategoryImages.coastal,
+  hillcountry: CategoryImages.hillCountry,
+};
 import { Colors, Shadows, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -91,7 +103,7 @@ export default function HomeScreen() {
               image={
                 item.images?.[0]
                   ? { uri: item.images[0] }
-                  : HeroImages.dawn
+                  : (STYLE_IMAGE[item.style?.toLowerCase() ?? ''] ?? HeroImages.dawn)
               }
               title={item.title}
               subtitle={`${item.duration} · LKR ${item.priceMin?.toLocaleString()}`}

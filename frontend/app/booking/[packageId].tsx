@@ -7,27 +7,47 @@ import { Button, Card, Field } from '@/components/yatara/ui';
 import { HeroImages } from '@/constants/images';
 import { Colors, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 
 export default function BookingRequestScreen() {
   const { packageId } = useLocalSearchParams<{ packageId: string }>();
+  const { user } = useAuth();
+  const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState('');
   const [pax, setPax] = useState('2');
   const [dateFrom, setDateFrom] = useState(new Date().toISOString().slice(0, 10));
+  const [dateTo, setDateTo] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().slice(0, 10);
+  });
   const [pickupLocation, setPickupLocation] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function submit() {
-    if (phone.trim().length < 7) {
-      Alert.alert('Invalid phone', 'Enter a valid phone number.');
+    if (!name.trim()) {
+      Alert.alert('Required', 'Enter your name.');
       return;
     }
-    if (!Number.isFinite(Number(pax)) || Number(pax) < 1) {
-      Alert.alert('Invalid passenger count', 'Passengers must be at least 1.');
+    if (phone.trim().length < 7) {
+      Alert.alert('Required', 'Enter a valid phone number.');
       return;
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateFrom)) {
-      Alert.alert('Invalid date', 'Use YYYY-MM-DD format.');
+      Alert.alert('Invalid date', 'Start date must be YYYY-MM-DD format.');
+      return;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateTo)) {
+      Alert.alert('Invalid date', 'End date must be YYYY-MM-DD format.');
+      return;
+    }
+    if (!Number.isFinite(Number(pax)) || Number(pax) < 1) {
+      Alert.alert('Required', 'Passenger count must be at least 1.');
+      return;
+    }
+    if (!pickupLocation.trim()) {
+      Alert.alert('Required', 'Enter a pickup location.');
       return;
     }
 
@@ -35,13 +55,15 @@ export default function BookingRequestScreen() {
       setLoading(true);
       await api.post('/bookings', {
         packageId,
+        customerName: name,
         phone,
-        pax: Number(pax || 1),
+        pax: Number(pax),
         dateFrom,
+        dateTo,
         pickupLocation,
         specialRequests,
       });
-      Alert.alert('Booking created', 'Your request is now visible in My Bookings.');
+      Alert.alert('Booking Submitted', 'Your request is now visible in My Bookings.');
       router.replace('/(tabs)/bookings');
     } catch (error) {
       Alert.alert('Booking failed', getApiError(error));
@@ -52,7 +74,6 @@ export default function BookingRequestScreen() {
 
   return (
     <View style={s.container}>
-      {/* Decorative header */}
       <View style={s.headerWrap}>
         <Image source={HeroImages.backdrop} style={s.headerImage} resizeMode="cover" />
         <LinearGradient
@@ -60,7 +81,7 @@ export default function BookingRequestScreen() {
           style={StyleSheet.absoluteFillObject}
         />
         <View style={s.headerContent}>
-          <Text style={s.headerTitle}>Booking{'\n'}Request</Text>
+          <Text style={s.headerTitle}>Request{'\n'}Booking</Text>
           <Text style={s.headerSub}>Secure your curated Sri Lanka journey</Text>
         </View>
       </View>
@@ -72,24 +93,14 @@ export default function BookingRequestScreen() {
           contentContainerStyle={s.formArea}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          {/* Step indicators */}
-          <View style={s.steps}>
-            {['Contact', 'Travel', 'Preferences'].map((step, idx) => (
-              <View key={step} style={s.stepItem}>
-                <View style={s.stepDot}>
-                  <Text style={s.stepNum}>{idx + 1}</Text>
-                </View>
-                <Text style={s.stepLabel}>{step}</Text>
-              </View>
-            ))}
-          </View>
-
           <Card>
+            <Field label="Your Name" value={name} onChangeText={setName} placeholder="Full name" />
             <Field label="Phone Number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+94 77 123 4567" />
             <Field label="Number of Guests" value={pax} onChangeText={setPax} keyboardType="numeric" placeholder="2" />
-            <Field label="Start Date (YYYY-MM-DD)" value={dateFrom} onChangeText={setDateFrom} placeholder="2026-06-15" />
+            <Field label="Travel Start Date (YYYY-MM-DD)" value={dateFrom} onChangeText={setDateFrom} placeholder="2026-06-15" />
+            <Field label="Travel End Date (YYYY-MM-DD)" value={dateTo} onChangeText={setDateTo} placeholder="2026-06-22" />
             <Field label="Pickup Location" value={pickupLocation} onChangeText={setPickupLocation} placeholder="Colombo Airport / Hotel name" />
-            <Field label="Special Requests" value={specialRequests} onChangeText={setSpecialRequests} multiline placeholder="Dietary needs, accessibility, celebrations..." />
+            <Field label="Special Requests (Optional)" value={specialRequests} onChangeText={setSpecialRequests} multiline placeholder="Dietary needs, celebrations…" />
           </Card>
 
           <Button title="Submit Booking" onPress={submit} loading={loading} />
@@ -108,16 +119,4 @@ const s = StyleSheet.create({
   headerTitle: { color: Colors.white, ...Typography.h1, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
   headerSub: { color: 'rgba(255,255,255,0.8)', ...Typography.caption, marginTop: 4 },
   formArea: { padding: 20 },
-  steps: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 },
-  stepItem: { alignItems: 'center', gap: 6 },
-  stepDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.deepEmerald,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepNum: { color: Colors.antiqueGold, ...Typography.captionBold },
-  stepLabel: { color: Colors.muted, ...Typography.tiny },
 });

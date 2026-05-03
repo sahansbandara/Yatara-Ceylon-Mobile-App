@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { BookOpen, CalendarDays, Home, Settings } from 'lucide-react-native';
+import { BookOpen, CalendarDays, Home, User } from 'lucide-react-native';
 import { Platform } from 'react-native';
 
 import { AuthGuard } from '@/components/yatara/auth-guard';
@@ -61,7 +61,7 @@ export default function TabLayout() {
           name="settings"
           options={{
             title: 'Profile',
-            tabBarIcon: ({ color, size }) => <Settings color={color} size={size} />,
+            tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
           }}
         />
       </Tabs>

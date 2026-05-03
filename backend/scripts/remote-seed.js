@@ -48,11 +48,11 @@ async function seed() {
   const existingPkgs = await get('/packages?public=true', token);
   if (!existingPkgs.data?.length) {
     const packages = [
-      { title: 'Luxury Sri Lanka in 10 Days', summary: 'A premium island journey through culture, coast, wildlife, and hill country.', duration: '10 Days', durationDays: 10, type: 'journey', style: 'Luxury', priceMin: 250000, priceMax: 450000, highlights: 'Private chauffeur,Boutique stays,Wildlife safari', inclusions: 'Hotel pickup,Breakfast,Guide support', tags: 'luxury,culture,wildlife' },
-      { title: 'Heritage Triangle Explorer', summary: 'Discover ancient kingdoms of Anuradhapura, Polonnaruwa and Sigiriya.', duration: '5 Days', durationDays: 5, type: 'journey', style: 'Heritage', priceMin: 120000, priceMax: 220000, highlights: 'Sigiriya Rock,Temple visits,Cultural dance', tags: 'heritage,culture' },
-      { title: 'Southern Coast & Wildlife', summary: 'Beaches of Mirissa, Galle Fort, and Yala leopard safari.', duration: '7 Days', durationDays: 7, type: 'journey', style: 'Wildlife', priceMin: 180000, priceMax: 320000, highlights: 'Whale watching,Galle Fort,Yala Safari', tags: 'wildlife,coastal,safari' },
-      { title: 'Hill Country Rail Adventure', summary: 'Tea estates, misty highlands, and the famous Ella train ride.', duration: '4 Days', durationDays: 4, type: 'journey', style: 'Adventure', priceMin: 95000, priceMax: 175000, highlights: 'Scenic train,Tea plantation,Nine Arches Bridge', tags: 'adventure,hillcountry' },
-      { title: 'Ayurveda Wellness Retreat', summary: 'A guided wellness reset with daily spa treatments and meditation.', duration: '6 Days', durationDays: 6, type: 'journey', style: 'Wellness', priceMin: 200000, priceMax: 380000, highlights: 'Daily treatments,Yoga sessions,Herbal cuisine', tags: 'wellness,ayurveda,spa' },
+      { title: 'Luxury Sri Lanka in 10 Days', summary: 'A premium island journey through culture, coast, wildlife, and hill country.', duration: '10 Days', durationDays: 10, type: 'journey', style: 'Luxury', priceMin: 250000, priceMax: 450000, highlights: 'Private chauffeur,Boutique stays,Wildlife safari', inclusions: 'Hotel pickup,Breakfast,Guide support', tags: 'luxury,culture,wildlife', images: 'https://yataraceylon.me/images/packages/luxury-sri-lanka-in-10-days-hero.webp,https://yataraceylon.me/images/packages/luxury-sri-lanka-in-10-days-gallery-1.webp,https://yataraceylon.me/images/packages/luxury-sri-lanka-in-10-days-gallery-2.webp' },
+      { title: 'Heritage Triangle Explorer', summary: 'Discover ancient kingdoms of Anuradhapura, Polonnaruwa and Sigiriya.', duration: '5 Days', durationDays: 5, type: 'journey', style: 'Heritage', priceMin: 120000, priceMax: 220000, highlights: 'Sigiriya Rock,Temple visits,Cultural dance', tags: 'heritage,culture', images: 'https://yataraceylon.me/images/packages/heritage-triangle-private-edition-hero.webp,https://yataraceylon.me/images/packages/heritage-triangle-private-edition-gallery-1.webp,https://yataraceylon.me/images/packages/heritage-triangle-private-edition-gallery-2.webp' },
+      { title: 'Southern Coast & Wildlife', summary: 'Beaches of Mirissa, Galle Fort, and Yala leopard safari.', duration: '7 Days', durationDays: 7, type: 'journey', style: 'Wildlife', priceMin: 180000, priceMax: 320000, highlights: 'Whale watching,Galle Fort,Yala Safari', tags: 'wildlife,coastal,safari', images: 'https://yataraceylon.me/images/packages/wildlife-coastal-luxe-hero.webp,https://yataraceylon.me/images/packages/wildlife-coastal-luxe-gallery-1.webp,https://yataraceylon.me/images/packages/wildlife-coastal-luxe-gallery-2.webp' },
+      { title: 'Hill Country Rail Adventure', summary: 'Tea estates, misty highlands, and the famous Ella train ride.', duration: '4 Days', durationDays: 4, type: 'journey', style: 'Adventure', priceMin: 95000, priceMax: 175000, highlights: 'Scenic train,Tea plantation,Nine Arches Bridge', tags: 'adventure,hillcountry', images: 'https://yataraceylon.me/images/packages/hill-country-tea-rail-retreat-hero.png,https://yataraceylon.me/images/packages/hill-country-tea-rail-retreat-gallery-1.png,https://yataraceylon.me/images/packages/hill-country-tea-rail-retreat-gallery-2.png' },
+      { title: 'Ayurveda Wellness Retreat', summary: 'A guided wellness reset with daily spa treatments and meditation.', duration: '6 Days', durationDays: 6, type: 'journey', style: 'Wellness', priceMin: 200000, priceMax: 380000, highlights: 'Daily treatments,Yoga sessions,Herbal cuisine', tags: 'wellness,ayurveda,spa', images: 'https://yataraceylon.me/images/packages/ayurveda-wellness-sanctuary-hero.webp,https://yataraceylon.me/images/packages/ayurveda-wellness-sanctuary-gallery-1.webp,https://yataraceylon.me/images/packages/ayurveda-wellness-sanctuary-gallery-2.webp' },
     ];
     for (const pkg of packages) {
       await post('/packages', pkg, token);
@@ -106,6 +106,49 @@ async function seed() {
       await post('/partners', p, token);
     }
     console.log(`Seeded ${partners.length} partners`);
+  }
+
+  // 7. Seed bookings
+  const travelerTokenRes = await post('/auth/login', { email: 'traveler@yataraceylon.com', password: 'Password123!' });
+  const tToken = travelerTokenRes.token;
+  
+  if (tToken) {
+    const existingBookings = await get('/bookings/my', tToken);
+    if (!existingBookings.data?.length) {
+      // Need a package ID
+      const pkgs = await get('/packages?public=true', token);
+      const pkg = pkgs.data?.[0];
+      
+      if (pkg) {
+        const bookings = [
+          {
+            packageId: pkg._id,
+            pax: 2,
+            dates: {
+              from: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              to: new Date(Date.now() + 24 * 24 * 60 * 60 * 1000).toISOString()
+            },
+            pickupLocation: 'Bandaranaike International Airport (CMB)',
+            specialRequirements: 'Vegetarian meals if possible.'
+          },
+          {
+            packageId: pkgs.data?.[1]?._id || pkg._id,
+            pax: 4,
+            dates: {
+              from: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              to: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000).toISOString()
+            },
+            pickupLocation: 'Colombo Hotel',
+            specialRequirements: 'Need a child seat for a 4 year old.'
+          }
+        ];
+        
+        for (const b of bookings) {
+          await post('/bookings', b, tToken);
+        }
+        console.log(`Seeded ${bookings.length} bookings for traveler`);
+      }
+    }
   }
 
   console.log('\n✅ Remote seed complete!');

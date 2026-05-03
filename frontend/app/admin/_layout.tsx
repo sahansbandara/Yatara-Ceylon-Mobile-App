@@ -1,5 +1,6 @@
-import { Redirect, Stack } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
+import { router, Redirect, Stack } from 'expo-router';
+import { ActivityIndicator, Pressable, View } from 'react-native';
+import { ChevronLeft } from 'lucide-react-native';
 
 import { Colors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
@@ -24,7 +25,24 @@ export default function AdminLayout() {
         headerStyle: { backgroundColor: Colors.deepEmerald },
         headerTintColor: Colors.white,
         headerTitleStyle: { fontWeight: '800' },
-      }}
-    />
+        headerBackTitleVisible: false,
+      }}>
+      <Stack.Screen
+        name="index"
+        options={{
+          title: 'Admin Dashboard',
+          headerLeft: () => (
+            <Pressable onPress={() => router.replace('/(tabs)')} style={{ marginRight: 15, flexDirection: 'row', alignItems: 'center' }}>
+              <ChevronLeft color={Colors.white} size={28} style={{ marginLeft: -8 }} />
+            </Pressable>
+          )
+        }}
+      />
+      <Stack.Screen name="packages" options={{ title: 'Packages' }} />
+      <Stack.Screen name="bookings" options={{ title: 'Bookings' }} />
+      <Stack.Screen name="vehicles" options={{ title: 'Vehicles' }} />
+      <Stack.Screen name="destinations" options={{ title: 'Destinations' }} />
+      <Stack.Screen name="partners" options={{ title: 'Partners' }} />
+    </Stack>
   );
 }
