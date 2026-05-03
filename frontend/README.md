@@ -1,11 +1,11 @@
-# Yatara Ceylon Expo Mobile App
+# Yatara Ceylon Expo Frontend App
 
 This is the React Native frontend for the Yatara Ceylon mobile assignment. It uses Expo Router, Axios, SecureStore, ImagePicker, React Hook Form, Zod, and Lucide icons.
 
 ## Setup
 
 ```bash
-cd mobile/Yatara-Ceylon
+cd frontend
 npm install
 cp .env.example .env
 npm start

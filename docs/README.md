@@ -14,6 +14,7 @@ This folder contains the assignment evidence for the React Native + Express + Mo
 | `MOBILE-VIVA-CHECKLIST.md` | Demo flow and viva preparation |
 | `MOBILE-FINAL-REPORT.md` | Report-ready project summary |
 | `WMT-ASSIGNMENT-COMPLIANCE.md` | Mapping from assignment requirements to implementation |
+| `SUBMISSION-ZIP-CHECKLIST.md` | SE2020 ZIP packaging checklist |
 
 ## Member Files
 
@@ -22,3 +23,7 @@ The `yatara_member_md_files/` folder contains one document per group member. Eac
 ## Diagrams
 
 The `diagrams/` folder contains HTML diagram assets for architecture and database schema. Export these as screenshots or PDF images for the final report.
+
+## Submission ZIP
+
+The `submission/README.txt` file is the README template for the LMS documentation ZIP. Fill in the final group number and hosted backend URL before packaging.

@@ -19,7 +19,7 @@
 | API-13 | Upload | Send multipart `image` to create/update endpoint | Image URL appears in `images` |
 | API-14 | DB safety | Point API to non-`yatara-mobile` DB | Server refuses to start |
 
-## Mobile App
+## Frontend App
 
 | ID | Scenario | Steps | Expected Result |
 | --- | --- | --- | --- |

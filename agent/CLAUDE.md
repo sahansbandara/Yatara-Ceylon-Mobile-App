@@ -5,7 +5,7 @@ This repo is scoped to the Yatara Ceylon mobile assignment.
 Do:
 
 - Work in `backend/` for Express API changes.
-- Work in `mobile/Yatara-Ceylon/` for React Native changes.
+- Work in `frontend/` for React Native changes.
 - Work in `docs/` for report, viva, deployment, API, and team evidence.
 - Preserve MongoDB safety checks.
 

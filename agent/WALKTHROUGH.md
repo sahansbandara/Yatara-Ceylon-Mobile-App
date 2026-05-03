@@ -40,7 +40,7 @@ npm run backend:seed
 
 ## 3. Mobile
 
-Create `mobile/Yatara-Ceylon/.env` from `.env.example`.
+Create `frontend/.env` from `.env.example`.
 
 For iOS simulator:
 
@@ -57,7 +57,7 @@ EXPO_PUBLIC_API_URL=http://192.168.1.10:5000/api
 Start Expo:
 
 ```bash
-npm run mobile:start
+npm run frontend:start
 ```
 
 ## 4. Final Demo

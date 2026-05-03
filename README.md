@@ -30,12 +30,15 @@ This repository is now a clean mobile-assignment project. The previous Next.js w
 │   ├── .env.example                 # Backend env template
 │   ├── render.yaml                  # Render deployment template
 │   └── server.js                    # API entrypoint
-├── mobile/Yatara-Ceylon/            # Expo React Native app
+├── frontend/                        # React Native Expo mobile app
 │   ├── app/                         # Expo Router screens
-│   ├── components/yatara/           # Shared UI and guards
+│   ├── components/                  # Shared UI and guards
 │   ├── constants/                   # Theme values
 │   ├── lib/                         # API, auth, upload helpers
-│   └── .env.example                 # Mobile env template
+│   ├── assets/                      # App icons and splash assets
+│   ├── .env.example                 # Frontend env template
+│   ├── app.json                     # Expo app config
+│   └── package.json                 # Frontend dependencies
 ├── docs/                            # Report, diagrams, API table, viva docs
 │   ├── diagrams/                    # Architecture and schema diagrams
 │   └── yatara_member_md_files/      # Six member module files
@@ -126,10 +129,10 @@ Demo accounts:
 | Staff | `staff@yataraceylon.com` | `Password123!` |
 | User | `traveler@yataraceylon.com` | `Password123!` |
 
-### 5. Configure Mobile App
+### 5. Configure Frontend App
 
 ```bash
-cd mobile/Yatara-Ceylon
+cd frontend
 cp .env.example .env
 ```
 
@@ -151,10 +154,10 @@ For final viva:
 EXPO_PUBLIC_API_URL=https://your-hosted-backend-url/api
 ```
 
-### 6. Start Mobile App
+### 6. Start Frontend App
 
 ```bash
-npm run mobile:start
+npm run frontend:start
 ```
 
 Scan the Expo QR code with Expo Go or run on emulator.
@@ -172,6 +175,24 @@ Summary:
 5. Open `/api/health` on the hosted backend.
 6. Set mobile `EXPO_PUBLIC_API_URL` to hosted `/api`.
 7. Run final demo from Expo Go/APK using hosted API.
+
+## Submission ZIP Rule
+
+Per the SE2020 submission guideline, the LMS ZIP must contain documentation only. Do not include this source code folder in the ZIP. Source code must be available through GitHub.
+
+Required ZIP structure:
+
+```text
+SE2020_Group_<GroupNumber>_Submission/
+├── Problem_Statement.pdf
+├── System_Architecture_Diagram.png
+├── Database_Schema_Diagram.png
+├── API_Endpoint_Table.pdf
+├── Team_Responsibility.pdf
+└── README.txt
+```
+
+Use [docs/submission/README.txt](docs/submission/README.txt) as the README template for the submission ZIP.
 
 ## Assignment Documentation
 
@@ -193,8 +214,8 @@ Diagrams:
 
 ```bash
 npm run backend:check
-npm run mobile:typecheck
-npm run mobile:lint
+npm run frontend:typecheck
+npm run frontend:lint
 npm run check
 ```
 

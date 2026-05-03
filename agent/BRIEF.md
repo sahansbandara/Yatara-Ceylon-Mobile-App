@@ -4,7 +4,7 @@
 
 Build and maintain a full-stack mobile assignment for Yatara Ceylon using:
 
-- Expo React Native frontend in `mobile/Yatara-Ceylon/`
+- Expo React Native frontend in `frontend/`
 - Node.js + Express backend in `backend/`
 - MongoDB Atlas database dedicated to the mobile app
 - JWT bearer authentication
@@ -18,7 +18,7 @@ The old website code has been removed from this repository. Do not recreate it, 
 | Path | Purpose |
 | --- | --- |
 | `backend/` | Express API, Mongoose models, controllers, routes, middleware, upload handling, seed script |
-| `mobile/Yatara-Ceylon/` | Expo Router app with auth, user flows, admin CRUD flows, API client |
+| `frontend/` | Expo Router app with auth, user flows, admin CRUD flows, API client |
 | `docs/` | API table, deployment guide, member docs, test cases, viva checklist, diagrams |
 | `agent/` | Working memory and checklist for future agents |
 
@@ -47,8 +47,8 @@ Backend guardrails:
 ## Acceptance Criteria
 
 - `npm run backend:check` passes from the repo root.
-- `npm run mobile:typecheck` passes from the repo root.
-- `npm run mobile:lint` passes from the repo root.
+- `npm run frontend:typecheck` passes from the repo root.
+- `npm run frontend:lint` passes from the repo root.
 - Mobile app uses `EXPO_PUBLIC_API_URL`.
 - Final demo uses a hosted API URL, not localhost.
 - Docs clearly show team responsibilities, API endpoints, deployment steps, test cases, and viva flow.

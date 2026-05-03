@@ -15,7 +15,7 @@ This is now a mobile-assignment-only repository.
 | Path | Purpose |
 | --- | --- |
 | `backend/` | Node.js + Express + MongoDB API |
-| `mobile/Yatara-Ceylon/` | Expo React Native mobile app |
+| `frontend/` | Expo React Native mobile app |
 | `docs/` | Assignment docs, diagrams, report, viva material |
 | `docs/yatara_member_md_files/` | Six member module files |
 | `agent/` | Agent tracking notes |
@@ -36,6 +36,6 @@ This is now a mobile-assignment-only repository.
 npm run install:all
 npm run backend:dev
 npm run backend:seed
-npm run mobile:start
+npm run frontend:start
 npm run check
 ```

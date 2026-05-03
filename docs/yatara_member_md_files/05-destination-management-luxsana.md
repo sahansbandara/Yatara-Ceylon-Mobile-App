@@ -26,11 +26,11 @@ Own destination records for the mobile app. Customers see featured destinations 
 
 | Screen/File | Purpose |
 | --- | --- |
-| `mobile/Yatara-Ceylon/app/(tabs)/index.tsx` | Featured destinations on home screen |
-| `mobile/Yatara-Ceylon/app/(tabs)/build.tsx` | Simple Build Tour entry |
-| `mobile/Yatara-Ceylon/app/build-tour/index.tsx` | Build Tour request screen |
-| `mobile/Yatara-Ceylon/app/admin/destinations.tsx` | Admin destination CRUD |
-| `mobile/Yatara-Ceylon/lib/upload.ts` | Image picker helper |
+| `frontend/app/(tabs)/index.tsx` | Featured destinations on home screen |
+| `frontend/app/(tabs)/build.tsx` | Simple Build Tour entry |
+| `frontend/app/build-tour/index.tsx` | Build Tour request screen |
+| `frontend/app/admin/destinations.tsx` | Admin destination CRUD |
+| `frontend/lib/upload.ts` | Image picker helper |
 
 ## API Endpoints
 

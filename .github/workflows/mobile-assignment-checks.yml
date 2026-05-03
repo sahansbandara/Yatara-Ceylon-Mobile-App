@@ -23,17 +23,17 @@ jobs:
         run: npm ci
         working-directory: backend
 
-      - name: Install mobile dependencies
+      - name: Install frontend dependencies
         run: npm ci
-        working-directory: mobile/Yatara-Ceylon
+        working-directory: frontend
 
       - name: Backend syntax check
         run: find backend -path 'backend/node_modules' -prune -o -name '*.js' -print | xargs node --check
 
-      - name: Mobile typecheck
+      - name: Frontend typecheck
         run: npx tsc --noEmit
-        working-directory: mobile/Yatara-Ceylon
+        working-directory: frontend
 
-      - name: Mobile lint
+      - name: Frontend lint
         run: npm run lint
-        working-directory: mobile/Yatara-Ceylon
+        working-directory: frontend

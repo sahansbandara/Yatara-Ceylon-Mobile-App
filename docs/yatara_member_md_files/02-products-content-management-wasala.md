@@ -25,11 +25,11 @@ Own tour package content for the mobile app. Customers browse packages and admin
 
 | Screen/File | Purpose |
 | --- | --- |
-| `mobile/Yatara-Ceylon/app/(tabs)/packages.tsx` | Customer package list |
-| `mobile/Yatara-Ceylon/app/packages/[id].tsx` | Package detail |
-| `mobile/Yatara-Ceylon/app/booking/[packageId].tsx` | Booking request from package |
-| `mobile/Yatara-Ceylon/app/admin/packages.tsx` | Admin package CRUD |
-| `mobile/Yatara-Ceylon/lib/upload.ts` | Image picker and multipart upload helper |
+| `frontend/app/(tabs)/packages.tsx` | Customer package list |
+| `frontend/app/packages/[id].tsx` | Package detail |
+| `frontend/app/booking/[packageId].tsx` | Booking request from package |
+| `frontend/app/admin/packages.tsx` | Admin package CRUD |
+| `frontend/lib/upload.ts` | Image picker and multipart upload helper |
 
 ## API Endpoints
 

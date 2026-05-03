@@ -18,7 +18,7 @@ This is not a WebView app. All mobile screens are native React Native screens an
 | Path | Purpose |
 | --- | --- |
 | `backend/` | Express API, Mongoose models, controllers, routes, middleware, upload handling, seed script |
-| `mobile/Yatara-Ceylon/` | Expo React Native frontend |
+| `frontend/` | Expo React Native frontend |
 | `docs/` | Assignment report material, diagrams, API docs, deployment guide, member docs |
 | `agent/` | Project tracking files for future coding agents |
 

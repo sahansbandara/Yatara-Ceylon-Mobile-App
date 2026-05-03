@@ -19,7 +19,7 @@
 
 - Expo Router is the chosen navigation system.
 - Auth token storage uses `expo-secure-store`.
-- API calls go through `mobile/Yatara-Ceylon/lib/api.ts`.
+- API calls go through `frontend/lib/api.ts`.
 - Set `EXPO_PUBLIC_API_URL` in the mobile app. Use LAN IP during development on a physical phone and hosted API for final evaluation.
 - The final viva must not use localhost as the backend URL.
 
@@ -46,6 +46,6 @@ Run from repo root:
 
 ```bash
 npm run backend:check
-npm run mobile:typecheck
-npm run mobile:lint
+npm run frontend:typecheck
+npm run frontend:lint
 ```

@@ -26,9 +26,9 @@ Own supplier/partner records for the mobile assignment. Admin/staff users manage
 
 | Screen/File | Purpose |
 | --- | --- |
-| `mobile/Yatara-Ceylon/app/admin/partners.tsx` | Admin partner CRUD |
-| `mobile/Yatara-Ceylon/lib/upload.ts` | Image picker helper |
-| `mobile/Yatara-Ceylon/lib/types.ts` | Partner TypeScript type |
+| `frontend/app/admin/partners.tsx` | Admin partner CRUD |
+| `frontend/lib/upload.ts` | Image picker helper |
+| `frontend/lib/types.ts` | Partner TypeScript type |
 
 ## API Endpoints
 

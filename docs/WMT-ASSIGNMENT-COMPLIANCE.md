@@ -6,7 +6,7 @@ Source reviewed: `WMT Group Assignment.pdf`.
 
 | Requirement | Implementation |
 | --- | --- |
-| React Native frontend | `mobile/Yatara-Ceylon` Expo React Native app |
+| React Native frontend | `frontend` Expo React Native app |
 | Node.js + Express.js backend | `backend` Express API |
 | MongoDB database | Mongoose models connected to MongoDB Atlas database `yatara-mobile` |
 | Hosted backend | Render config included in `backend/render.yaml`; final deployment still needs env values |

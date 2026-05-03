@@ -3,7 +3,8 @@
 ## Repository Cleanup
 
 - [x] Remove old non-mobile source, public assets, and web-only config.
-- [x] Keep only mobile assignment surfaces: `backend/`, `mobile/Yatara-Ceylon/`, `docs/`, `agent/`.
+- [x] Keep only mobile assignment surfaces: `backend/`, `frontend/`, `docs/`, `agent/`.
+- [x] Rename Expo app to `frontend/` to match SE2020 GitHub structure guidelines.
 - [x] Replace root README and AGENTS instructions with mobile-specific guidance.
 - [x] Remove Expo starter screens/components that are not used by the assignment app.
 
@@ -23,7 +24,7 @@
 - [x] Add seed script for demo users and sample records.
 - [ ] Add optional automated API tests if time allows.
 
-## Mobile App
+## Frontend App
 
 - [x] Rebuild Expo Router structure for assignment screens.
 - [x] Add central Axios API client with bearer token injection.

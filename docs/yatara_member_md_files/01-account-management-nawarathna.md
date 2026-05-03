@@ -27,12 +27,12 @@ Own the authentication slice for the mobile assignment. This includes customer r
 
 | Screen/File | Purpose |
 | --- | --- |
-| `mobile/Yatara-Ceylon/app/index.tsx` | Splash and initial redirect |
-| `mobile/Yatara-Ceylon/app/auth/login.tsx` | Login form |
-| `mobile/Yatara-Ceylon/app/auth/register.tsx` | Registration form |
-| `mobile/Yatara-Ceylon/app/(tabs)/settings.tsx` | Profile and logout |
-| `mobile/Yatara-Ceylon/lib/auth.tsx` | Auth context and SecureStore token persistence |
-| `mobile/Yatara-Ceylon/lib/api.ts` | Bearer token injection for API calls |
+| `frontend/app/index.tsx` | Splash and initial redirect |
+| `frontend/app/auth/login.tsx` | Login form |
+| `frontend/app/auth/register.tsx` | Registration form |
+| `frontend/app/(tabs)/settings.tsx` | Profile and logout |
+| `frontend/lib/auth.tsx` | Auth context and SecureStore token persistence |
+| `frontend/lib/api.ts` | Bearer token injection for API calls |
 
 ## API Endpoints
 

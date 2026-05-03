@@ -32,7 +32,7 @@ Safety rule: do not use the old website database. The backend guard expects `MOB
 
 ```text
 backend/
-mobile/Yatara-Ceylon/
+frontend/
 docs/
 agent/
 ```
@@ -129,9 +129,9 @@ Demo accounts:
 | Staff | `staff@yataraceylon.com` | `Password123!` |
 | User | `traveler@yataraceylon.com` | `Password123!` |
 
-## 6. Configure Mobile App
+## 6. Configure Frontend App
 
-In `mobile/Yatara-Ceylon/.env`:
+In `frontend/.env`:
 
 ```env
 EXPO_PUBLIC_API_URL=https://your-hosted-backend-url/api
@@ -154,7 +154,7 @@ Restart Expo after changing `.env`.
 ## 7. Run Mobile Demo
 
 ```bash
-cd mobile/Yatara-Ceylon
+cd frontend
 npm start
 ```
 

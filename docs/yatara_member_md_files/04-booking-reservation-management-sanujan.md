@@ -25,10 +25,10 @@ Own booking creation and booking status management. Customers create bookings fr
 
 | Screen/File | Purpose |
 | --- | --- |
-| `mobile/Yatara-Ceylon/app/booking/[packageId].tsx` | Customer booking request form |
-| `mobile/Yatara-Ceylon/app/(tabs)/bookings.tsx` | Customer My Bookings |
-| `mobile/Yatara-Ceylon/app/admin/bookings.tsx` | Admin booking list and status update |
-| `mobile/Yatara-Ceylon/lib/types.ts` | Booking TypeScript type |
+| `frontend/app/booking/[packageId].tsx` | Customer booking request form |
+| `frontend/app/(tabs)/bookings.tsx` | Customer My Bookings |
+| `frontend/app/admin/bookings.tsx` | Admin booking list and status update |
+| `frontend/lib/types.ts` | Booking TypeScript type |
 
 ## API Endpoints
 

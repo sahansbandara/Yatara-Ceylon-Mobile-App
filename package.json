@@ -7,16 +7,16 @@
     "node": ">=18"
   },
   "scripts": {
-    "install:all": "npm install --prefix backend && npm install --prefix mobile/Yatara-Ceylon",
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
     "backend:dev": "npm run dev --prefix backend",
     "backend:start": "npm start --prefix backend",
     "backend:seed": "npm run seed --prefix backend",
     "backend:check": "find backend -path 'backend/node_modules' -prune -o -name '*.js' -print | xargs node --check",
-    "mobile:start": "npm start --prefix mobile/Yatara-Ceylon",
-    "mobile:android": "npm run android --prefix mobile/Yatara-Ceylon",
-    "mobile:ios": "npm run ios --prefix mobile/Yatara-Ceylon",
-    "mobile:lint": "npm run lint --prefix mobile/Yatara-Ceylon",
-    "mobile:typecheck": "npm run typecheck --prefix mobile/Yatara-Ceylon",
-    "check": "npm run backend:check && npm run mobile:typecheck && npm run mobile:lint"
+    "frontend:start": "npm start --prefix frontend",
+    "frontend:android": "npm run android --prefix frontend",
+    "frontend:ios": "npm run ios --prefix frontend",
+    "frontend:lint": "npm run lint --prefix frontend",
+    "frontend:typecheck": "npm run typecheck --prefix frontend",
+    "check": "npm run backend:check && npm run frontend:typecheck && npm run frontend:lint"
   }
 }
