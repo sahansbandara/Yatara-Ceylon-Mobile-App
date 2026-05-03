@@ -1,24 +1,30 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Button, Card, Divider, Field, Screen, SectionHeader } from '@/components/yatara/ui';
-import { Colors, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { Destination } from '@/lib/types';
 import { appendImage, pickImage } from '@/lib/upload';
 
+const DARK_BG = '#0B100E';
+const DARK_CARD = '#161B19';
+const DARK_TEXT = '#F8F4EA';
+const MUTED = '#8B9A96';
+const BORDER = '#222B28';
+const GOLD = '#D4AF37';
+const INPUT_BG = '#121715';
+const EMERALD = '#063f32';
+
 export default function ManageDestinationsScreen() {
   const [items, setItems] = useState<Destination[]>([]);
+  const [showForm, setShowForm] = useState(false);
 
-  // Create form
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [region, setRegion] = useState('');
   const [bestSeason, setBestSeason] = useState('');
   const [image, setImage] = useState<{ uri: string; name: string; type: string } | null>(null);
 
-  // Inline edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -57,7 +63,7 @@ export default function ManageDestinationsScreen() {
     appendImage(form, image);
     try {
       await api.post('/destinations', form, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setTitle(''); setDescription(''); setRegion(''); setBestSeason(''); setImage(null);
+      setTitle(''); setDescription(''); setRegion(''); setBestSeason(''); setImage(null); setShowForm(false);
       load();
     } catch (e) { Alert.alert('Create failed', getApiError(e)); }
   }
@@ -89,64 +95,125 @@ export default function ManageDestinationsScreen() {
   }
 
   return (
-    <Screen>
-      <SectionHeader title="Manage Destinations" subtitle={`${items.length} listed destinations`} />
+    <View style={s.screen}>
       <FlatList
         ListHeaderComponent={
-          <Card style={{ marginBottom: 20 }}>
-            <Text style={s.sectionTitle}>Add Destination</Text>
-            <Field label="Title" value={title} onChangeText={setTitle} placeholder="e.g. Sigiriya" />
-            <Field label="Description" value={description} onChangeText={setDescription} multiline placeholder="Short description…" />
-            <Field label="Region" value={region} onChangeText={setRegion} placeholder="e.g. Cultural Triangle" />
-            <Field label="Best Season" value={bestSeason} onChangeText={setBestSeason} placeholder="e.g. Dec – Mar" />
-            <Button title={image ? '✓ Image Selected' : 'Pick Image'} variant="secondary" onPress={async () => setImage(await pickImage())} />
-            <View style={{ height: 10 }} />
-            <Button title="Create Destination" onPress={create} />
-          </Card>
+          <View>
+            <View style={s.headerRow}>
+              <View>
+                <Text style={s.headerTitle}>Destinations</Text>
+                <Text style={s.headerSub}>{items.length} listed destinations</Text>
+              </View>
+              <Pressable style={s.addBtn} onPress={() => setShowForm(!showForm)}>
+                <Text style={s.addBtnText}>+ Add</Text>
+              </Pressable>
+            </View>
+
+            {showForm && (
+              <View style={s.formCard}>
+                <Text style={s.formTitle}>Add Destination</Text>
+                <DarkField label="Title" value={title} onChangeText={setTitle} placeholder="e.g. Sigiriya" />
+                <DarkField label="Description" value={description} onChangeText={setDescription} multiline placeholder="Short description..." />
+                <DarkField label="Region" value={region} onChangeText={setRegion} placeholder="e.g. Cultural Triangle" />
+                <DarkField label="Best Season" value={bestSeason} onChangeText={setBestSeason} placeholder="e.g. Dec - Mar" />
+                <Pressable style={[s.secondaryBtn, image && { borderColor: '#10b981' }]} onPress={async () => setImage(await pickImage())}>
+                  <Text style={[s.secondaryBtnText, image && { color: '#10b981' }]}>{image ? 'Image Selected' : 'Pick Image'}</Text>
+                </Pressable>
+                <View style={{ height: 8 }} />
+                <View style={s.formActions}>
+                  <Pressable style={s.primaryBtn} onPress={create}><Text style={s.primaryBtnText}>Create Destination</Text></Pressable>
+                  <Pressable style={s.secondaryBtn} onPress={() => setShowForm(false)}><Text style={s.secondaryBtnText}>Cancel</Text></Pressable>
+                </View>
+              </View>
+            )}
+          </View>
         }
         data={items}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={s.listContent}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
-          <Card>
+          <View style={s.card}>
             {editingId === item._id ? (
               <View>
-                <Text style={s.sectionTitle}>Edit Destination</Text>
-                <Field label="Title" value={editTitle} onChangeText={setEditTitle} />
-                <Field label="Description" value={editDescription} onChangeText={setEditDescription} multiline />
-                <Field label="Region" value={editRegion} onChangeText={setEditRegion} />
-                <Field label="Best Season" value={editBestSeason} onChangeText={setEditBestSeason} />
-                <Button title={editImage ? '✓ New Image' : 'Change Image'} variant="secondary" onPress={async () => setEditImage(await pickImage())} />
-                <View style={{ height: 10 }} />
-                <View style={s.actionRow}>
-                  <Button title="Save" onPress={() => saveEdit(item._id)} fullWidth={false} />
-                  <Button title="Cancel" variant="secondary" onPress={cancelEdit} fullWidth={false} />
+                <Text style={s.formTitle}>Edit Destination</Text>
+                <DarkField label="Title" value={editTitle} onChangeText={setEditTitle} />
+                <DarkField label="Description" value={editDescription} onChangeText={setEditDescription} multiline />
+                <DarkField label="Region" value={editRegion} onChangeText={setEditRegion} />
+                <DarkField label="Best Season" value={editBestSeason} onChangeText={setEditBestSeason} />
+                <Pressable style={[s.secondaryBtn, editImage && { borderColor: '#10b981' }]} onPress={async () => setEditImage(await pickImage())}>
+                  <Text style={[s.secondaryBtnText, editImage && { color: '#10b981' }]}>{editImage ? 'New Image' : 'Change Image'}</Text>
+                </Pressable>
+                <View style={{ height: 8 }} />
+                <View style={s.formActions}>
+                  <Pressable style={s.primaryBtn} onPress={() => saveEdit(item._id)}><Text style={s.primaryBtnText}>Save</Text></Pressable>
+                  <Pressable style={s.secondaryBtn} onPress={cancelEdit}><Text style={s.secondaryBtnText}>Cancel</Text></Pressable>
                 </View>
               </View>
             ) : (
               <View>
-                <Text style={s.itemTitle}>{item.title}</Text>
-                <Text style={s.itemSub}>{item.region || 'No region'}</Text>
-                {item.bestSeason ? <Text style={s.itemMeta}>Best season: {item.bestSeason}</Text> : null}
-                <Divider />
-                <View style={s.actionRow}>
-                  <Button title="Edit" variant="secondary" onPress={() => startEdit(item)} fullWidth={false} />
-                  <Button title="Delete" variant="danger" onPress={() => remove(item._id)} fullWidth={false} />
+                <Text style={s.cardTitle}>{item.title}</Text>
+                <Text style={s.cardSub}>{item.region || 'No region'}</Text>
+                {item.bestSeason ? <Text style={s.cardMeta}>Best season: {item.bestSeason}</Text> : null}
+                <View style={s.divider} />
+                <View style={s.cardActions}>
+                  <Pressable style={s.secondaryBtn} onPress={() => startEdit(item)}><Text style={s.secondaryBtnText}>Edit</Text></Pressable>
+                  <Pressable style={s.dangerBtn} onPress={() => remove(item._id)}><Text style={s.dangerBtnText}>Delete</Text></Pressable>
                 </View>
               </View>
             )}
-          </Card>
+          </View>
         )}
       />
-    </Screen>
+    </View>
+  );
+}
+
+function DarkField({ label, value, onChangeText, placeholder, multiline, keyboardType }: {
+  label: string; value: string; onChangeText: (t: string) => void;
+  placeholder?: string; multiline?: boolean; keyboardType?: 'numeric' | 'default';
+}) {
+  return (
+    <View style={s.fieldWrap}>
+      <Text style={s.fieldLabel}>{label}</Text>
+      <TextInput
+        style={[s.fieldInput, multiline && { height: 80, textAlignVertical: 'top' }]}
+        value={value} onChangeText={onChangeText} placeholder={placeholder}
+        placeholderTextColor="#4A5550" multiline={multiline} keyboardType={keyboardType}
+      />
+    </View>
   );
 }
 
 const s = StyleSheet.create({
-  sectionTitle: { color: Colors.deepEmerald, ...Typography.h4, marginBottom: 10 },
-  itemTitle: { color: Colors.deepEmerald, ...Typography.h4, marginBottom: 2 },
-  itemSub: { color: Colors.muted, ...Typography.caption },
-  itemMeta: { color: Colors.muted, ...Typography.tiny, marginTop: 2 },
-  actionRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  screen: { flex: 1, backgroundColor: DARK_BG },
+  listContent: { padding: 20, paddingBottom: 40 },
+
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  headerTitle: { color: DARK_TEXT, fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
+  headerSub: { color: MUTED, fontSize: 13, fontWeight: '500', marginTop: 2 },
+  addBtn: { backgroundColor: EMERALD, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18 },
+  addBtnText: { color: DARK_TEXT, fontSize: 13, fontWeight: '700' },
+
+  formCard: { backgroundColor: DARK_CARD, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: BORDER, marginBottom: 20 },
+  formTitle: { color: GOLD, fontSize: 16, fontWeight: '700', marginBottom: 16, letterSpacing: 0.3 },
+  formActions: { flexDirection: 'row', gap: 10 },
+
+  card: { backgroundColor: DARK_CARD, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: '#1D2522', marginBottom: 14 },
+  cardTitle: { color: DARK_TEXT, fontSize: 17, fontWeight: '700', marginBottom: 4 },
+  cardSub: { color: GOLD, fontSize: 13, fontWeight: '600' },
+  cardMeta: { color: MUTED, fontSize: 11, fontWeight: '500', marginTop: 2 },
+  divider: { height: 1, backgroundColor: '#1D2522', marginVertical: 14 },
+  cardActions: { flexDirection: 'row', gap: 10 },
+
+  fieldWrap: { marginBottom: 14 },
+  fieldLabel: { color: MUTED, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 },
+  fieldInput: { backgroundColor: INPUT_BG, borderWidth: 1, borderColor: BORDER, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, color: DARK_TEXT, fontSize: 14 },
+
+  primaryBtn: { backgroundColor: EMERALD, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 20, alignItems: 'center' },
+  primaryBtnText: { color: DARK_TEXT, fontSize: 14, fontWeight: '700' },
+  secondaryBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: BORDER, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 20, alignItems: 'center' },
+  secondaryBtnText: { color: MUTED, fontSize: 14, fontWeight: '600' },
+  dangerBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#3D1C1C', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 20, alignItems: 'center' },
+  dangerBtnText: { color: '#ef4444', fontSize: 14, fontWeight: '600' },
 });

@@ -17,6 +17,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="auth" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(admin-tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="packages/[id]" options={{ title: 'Package Details' }} />
         <Stack.Screen name="booking/[packageId]" options={{ title: 'Booking Request' }} />
         <Stack.Screen name="build-tour/index" options={{ title: 'Build Tour' }} />

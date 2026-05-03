@@ -22,8 +22,8 @@ export default function LoginScreen() {
     }
     try {
       setLoading(true);
-      await login(email, password);
-      router.replace('/(tabs)');
+      const user = await login(email, password);
+      router.replace(user.role === 'ADMIN' || user.role === 'STAFF' ? '/(admin-tabs)' : '/(tabs)');
     } catch (error) {
       Alert.alert('Login failed', getApiError(error));
     } finally {

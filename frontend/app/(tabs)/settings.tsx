@@ -91,7 +91,7 @@ export default function ProfileScreen() {
         {isAdmin && (
           <Pressable 
             style={({ pressed }) => [s.menuItem, pressed && { opacity: 0.8 }]}
-            onPress={() => router.push('/admin')}
+            onPress={() => router.push('/(admin-tabs)' as any)}
           >
             <Compass size={18} color={MUTED} />
             <Text style={s.menuText}>Admin Command Center</Text>

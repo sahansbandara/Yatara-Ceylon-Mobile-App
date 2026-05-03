@@ -6,7 +6,7 @@ export const TOKEN_KEY = 'yatara_mobile_token';
 
 export const api = axios.create({
   baseURL: API_URL,
-  timeout: 15000,
+  timeout: 60000,
 });
 
 api.interceptors.request.use(async (config) => {
@@ -19,6 +19,12 @@ api.interceptors.request.use(async (config) => {
 
 export function getApiError(error: unknown) {
   if (axios.isAxiosError(error)) {
+    if (error.code === 'ECONNABORTED') {
+      return `The API did not respond in time. Check that ${API_URL} is online and reachable from this device.`;
+    }
+    if (error.code === 'ERR_NETWORK') {
+      return `Cannot reach the API at ${API_URL}. Check your internet connection or backend URL.`;
+    }
     return error.response?.data?.error || error.message;
   }
   return 'Something went wrong';

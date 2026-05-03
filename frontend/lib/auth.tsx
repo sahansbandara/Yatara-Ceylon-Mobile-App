@@ -17,7 +17,7 @@ type AuthContextValue = {
   token: string | null;
   loading: boolean;
   isAdmin: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   register: (payload: { name: string; email: string; phone: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -60,6 +60,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await SecureStore.setItemAsync(TOKEN_KEY, response.data.token);
     setToken(response.data.token);
     setUser(response.data.user);
+    return response.data.user;
   }
 
   async function register(payload: { name: string; email: string; phone: string; password: string }) {

@@ -31,7 +31,7 @@ const STYLE_IMAGE: Record<string, ImageSourcePropType> = {
 };
 
 export default function HomeScreen() {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const [packages, setPackages] = useState<PackageItem[]>([]);
   const [destinations, setDestinations] = useState<Destination[]>([]);
 
@@ -62,15 +62,6 @@ export default function HomeScreen() {
           title={`Ayubowan, ${firstName}`}
           subtitle="Your curated Sri Lanka experience awaits"
         />
-
-        {/* Admin CTA */}
-        {isAdmin ? (
-          <Button
-            title="Open Admin Dashboard"
-            variant="gold"
-            onPress={() => router.push('/admin')}
-          />
-        ) : null}
 
         {/* Tour Categories */}
         <SectionHeader title="Explore Journeys" subtitle="Curated experiences across Sri Lanka" />
