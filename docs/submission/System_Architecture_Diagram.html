@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yatara Ceylon — System Architecture Diagram</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f4f3; color: #10201b; padding: 40px 20px; }
+  .page { max-width: 1100px; margin: 0 auto; }
+  h1 { text-align: center; font-size: 28px; color: #063f32; margin-bottom: 6px; }
+  .subtitle { text-align: center; font-size: 14px; color: #69736f; margin-bottom: 40px; }
+  .diagram { display: flex; flex-direction: column; gap: 28px; }
+  .layer { border-radius: 16px; padding: 28px; position: relative; }
+  .layer-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 16px; }
+  .boxes { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+  .box { background: #fff; border-radius: 10px; padding: 14px 18px; min-width: 140px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.06); }
+  .box-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .box-desc { font-size: 11px; color: #69736f; }
+
+  .mobile { background: linear-gradient(135deg, #e8f5e9, #e0f2f1); border: 2px solid #a5d6a7; }
+  .mobile .layer-title { color: #2e7d32; }
+  .backend { background: linear-gradient(135deg, #e3f2fd, #e8eaf6); border: 2px solid #90caf9; }
+  .backend .layer-title { color: #1565c0; }
+  .data { background: linear-gradient(135deg, #fff3e0, #fce4ec); border: 2px solid #ffcc80; }
+  .data .layer-title { color: #e65100; }
+
+  .arrow-row { display: flex; justify-content: center; align-items: center; gap: 10px; }
+  .arrow { font-size: 28px; color: #90a4ae; }
+  .arrow-label { font-size: 12px; color: #69736f; background: #fff; padding: 4px 14px; border-radius: 20px; border: 1px solid #cfd8dc; }
+
+  .section-group { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .section { border: 1.5px dashed rgba(0,0,0,0.15); border-radius: 12px; padding: 14px; }
+  .section-label { font-size: 11px; font-weight: 700; color: #455a64; margin-bottom: 8px; text-align: center; }
+
+  .footer { text-align: center; margin-top: 32px; font-size: 12px; color: #90a4ae; }
+  @media print { body { background: #fff; padding: 20px; } .layer { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>System Architecture Diagram</h1>
+  <p class="subtitle">Yatara Ceylon Mobile App &mdash; Group WE_IT_02 &mdash; MERN Stack (MongoDB, Express, React Native, Node.js)</p>
+
+  <div class="diagram">
+
+    <!-- MOBILE LAYER -->
+    <div class="layer mobile">
+      <div class="layer-title">&#x1F4F1; Mobile App &mdash; React Native 0.81 + Expo SDK 54 + TypeScript 5.9</div>
+      <div class="section-group">
+        <div class="section">
+          <div class="section-label">Auth Flow</div>
+          <div class="boxes">
+            <div class="box"><div class="box-title">Splash Screen</div><div class="box-desc">index.tsx</div></div>
+            <div class="box"><div class="box-title">Login</div><div class="box-desc">auth/login.tsx</div></div>
+            <div class="box"><div class="box-title">Register</div><div class="box-desc">auth/register.tsx</div></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-label">Customer Tabs</div>
+          <div class="boxes">
+            <div class="box"><div class="box-title">Home</div><div class="box-desc">Carousels &amp; featured</div></div>
+            <div class="box"><div class="box-title">Packages</div><div class="box-desc">Browse &amp; filter</div></div>
+            <div class="box"><div class="box-title">My Bookings</div><div class="box-desc">Status tracking</div></div>
+            <div class="box"><div class="box-title">Profile</div><div class="box-desc">Settings &amp; logout</div></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-label">Admin Tabs</div>
+          <div class="boxes">
+            <div class="box"><div class="box-title">Dashboard</div><div class="box-desc">KPI stat grid</div></div>
+            <div class="box"><div class="box-title">Bookings</div><div class="box-desc">Status pipeline</div></div>
+            <div class="box"><div class="box-title">Packages</div><div class="box-desc">CRUD management</div></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-label">Admin Management Stack</div>
+          <div class="boxes">
+            <div class="box"><div class="box-title">Vehicles</div><div class="box-desc">Fleet CRUD</div></div>
+            <div class="box"><div class="box-title">Destinations</div><div class="box-desc">Content CRUD</div></div>
+            <div class="box"><div class="box-title">Partners</div><div class="box-desc">Supplier CRUD</div></div>
+            <div class="box"><div class="box-title">Users</div><div class="box-desc">Role management</div></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-label">Additional Screens</div>
+          <div class="boxes">
+            <div class="box"><div class="box-title">Build Tour</div><div class="box-desc">Custom tour builder</div></div>
+            <div class="box"><div class="box-title">Transfers</div><div class="box-desc">Transfer services</div></div>
+            <div class="box"><div class="box-title">Package Detail</div><div class="box-desc">Hero + itinerary</div></div>
+            <div class="box"><div class="box-title">Booking Form</div><div class="box-desc">Pax, dates, pickup</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <div class="boxes">
+          <div class="box" style="border-color:#a5d6a7;"><div class="box-title">AuthContext</div><div class="box-desc">SecureStore token</div></div>
+          <div class="box" style="border-color:#a5d6a7;"><div class="box-title">Axios Interceptor</div><div class="box-desc">Bearer token injection</div></div>
+          <div class="box" style="border-color:#a5d6a7;"><div class="box-title">Expo Router 6.x</div><div class="box-desc">File-based navigation</div></div>
+          <div class="box" style="border-color:#a5d6a7;"><div class="box-title">React Hook Form + Zod</div><div class="box-desc">Client validation</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARROW -->
+    <div class="arrow-row">
+      <span class="arrow">&darr;&uarr;</span>
+      <span class="arrow-label">HTTPS &mdash; Axios + JWT Bearer Token in Authorization Header</span>
+      <span class="arrow">&darr;&uarr;</span>
+    </div>
+
+    <!-- BACKEND LAYER -->
+    <div class="layer backend">
+      <div class="layer-title">&#x2699;&#xFE0F; Backend API &mdash; Node.js 18+ / Express.js 4.x</div>
+      <div class="section-group">
+        <div class="section">
+          <div class="section-label">Route Layer</div>
+          <div class="boxes">
+            <div class="box"><div class="box-title">/api/auth</div><div class="box-desc">Register, Login, Me</div></div>
+            <div class="box"><div class="box-title">/api/packages</div><div class="box-desc">Tour package CRUD</div></div>
+            <div class="box"><div class="box-title">/api/bookings</div><div class="box-desc">Booking lifecycle</div></div>
+            <div class="box"><div class="box-title">/api/vehicles</div><div class="box-desc">Fleet CRUD</div></div>
+            <div class="box"><div class="box-title">/api/destinations</div><div class="box-desc">Content CRUD</div></div>
+            <div class="box"><div class="box-title">/api/partners</div><div class="box-desc">Supplier CRUD</div></div>
+            <div class="box"><div class="box-title">/api/users</div><div class="box-desc">User management</div></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-label">Middleware Chain</div>
+          <div class="boxes">
+            <div class="box"><div class="box-title">JWT Protect</div><div class="box-desc">Verify token &amp; load user</div></div>
+            <div class="box"><div class="box-title">Role Authorize</div><div class="box-desc">ADMIN / STAFF gate</div></div>
+            <div class="box"><div class="box-title">Multer Upload</div><div class="box-desc">multipart/form-data</div></div>
+            <div class="box"><div class="box-title">Zod Validation</div><div class="box-desc">Runtime schema check</div></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-label">Controller Layer</div>
+          <div class="boxes">
+            <div class="box"><div class="box-title">Auth Controller</div><div class="box-desc">Custom handlers</div></div>
+            <div class="box"><div class="box-title">Package Controller</div><div class="box-desc">Custom + slug gen</div></div>
+            <div class="box"><div class="box-title">Booking Controller</div><div class="box-desc">Custom + auto-cost</div></div>
+            <div class="box"><div class="box-title">CRUD Factory</div><div class="box-desc">Vehicle, Destination, Partner</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARROW -->
+    <div class="arrow-row">
+      <span class="arrow">&darr;&uarr;</span>
+      <span class="arrow-label">Mongoose ODM 8.x &mdash; Schema Validation, Soft Deletes, Populate</span>
+      <span class="arrow">&darr;&uarr;</span>
+    </div>
+
+    <!-- DATA LAYER -->
+    <div class="layer data">
+      <div class="layer-title">&#x1F5C4;&#xFE0F; Data Layer &mdash; MongoDB Atlas + File Storage</div>
+      <div class="section-group">
+        <div class="section">
+          <div class="section-label">MongoDB Atlas (yatara-mobile)</div>
+          <div class="boxes">
+            <div class="box"><div class="box-title">Users</div><div class="box-desc">5 roles, bcrypt hash</div></div>
+            <div class="box"><div class="box-title">Packages</div><div class="box-desc">Itinerary sub-docs</div></div>
+            <div class="box"><div class="box-title">Bookings</div><div class="box-desc">Auto booking number</div></div>
+            <div class="box"><div class="box-title">Vehicles</div><div class="box-desc">5 types, availability</div></div>
+            <div class="box"><div class="box-title">Destinations</div><div class="box-desc">Regions &amp; seasons</div></div>
+            <div class="box"><div class="box-title">Partners</div><div class="box-desc">4 supplier types</div></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-label">File Storage</div>
+          <div class="boxes">
+            <div class="box"><div class="box-title">/uploads/</div><div class="box-desc">Images via Multer</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer">SE2020 &mdash; SLIIT Faculty of Computing &mdash; Group WE_IT_02 &mdash; Yatara Ceylon Mobile App</p>
+</div>
+</body>
+</html>

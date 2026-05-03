@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yatara Ceylon — Database Schema Diagram</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f4f3; color: #10201b; padding: 40px 20px; }
+  .page { max-width: 1200px; margin: 0 auto; }
+  h1 { text-align: center; font-size: 28px; color: #063f32; margin-bottom: 6px; }
+  .subtitle { text-align: center; font-size: 14px; color: #69736f; margin-bottom: 40px; }
+
+  .schema-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 36px; }
+  @media (max-width: 900px) { .schema-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .schema-grid { grid-template-columns: 1fr; } }
+
+  .entity { border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 2px solid; }
+  .entity-header { padding: 14px 18px; display: flex; align-items: center; gap: 10px; }
+  .entity-icon { font-size: 22px; }
+  .entity-name { font-size: 16px; font-weight: 800; color: #fff; }
+  .entity-collection { font-size: 11px; color: rgba(255,255,255,0.8); margin-left: auto; font-family: monospace; }
+
+  .fields { padding: 0; }
+  .field { display: flex; align-items: center; padding: 8px 18px; border-bottom: 1px solid #f0f0f0; font-size: 13px; background: #fff; }
+  .field:last-child { border-bottom: none; }
+  .field-name { font-weight: 600; min-width: 130px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
+  .field-type { color: #1565c0; font-size: 11px; min-width: 90px; font-family: monospace; }
+  .field-meta { font-size: 11px; color: #90a4ae; margin-left: auto; }
+  .badge { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-left: 4px; }
+  .badge-pk { background: #fff3e0; color: #e65100; }
+  .badge-req { background: #e8f5e9; color: #2e7d32; }
+  .badge-ref { background: #e3f2fd; color: #1565c0; }
+  .badge-idx { background: #f3e5f5; color: #7b1fa2; }
+  .badge-unique { background: #fce4ec; color: #c62828; }
+  .badge-enum { background: #e0f7fa; color: #00695c; }
+  .badge-default { background: #f5f5f5; color: #616161; }
+
+  .c-user { border-color: #2e7d32; }     .c-user .entity-header { background: linear-gradient(135deg, #2e7d32, #388e3c); }
+  .c-package { border-color: #1565c0; }  .c-package .entity-header { background: linear-gradient(135deg, #1565c0, #1976d2); }
+  .c-booking { border-color: #e65100; }  .c-booking .entity-header { background: linear-gradient(135deg, #e65100, #f57c00); }
+  .c-vehicle { border-color: #6a1b9a; }  .c-vehicle .entity-header { background: linear-gradient(135deg, #6a1b9a, #8e24aa); }
+  .c-dest { border-color: #00695c; }     .c-dest .entity-header { background: linear-gradient(135deg, #00695c, #00897b); }
+  .c-partner { border-color: #c62828; }  .c-partner .entity-header { background: linear-gradient(135deg, #c62828, #e53935); }
+
+  .relations { background: #fff; border-radius: 14px; padding: 28px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 2px solid #e0e0e0; }
+  .relations h2 { font-size: 16px; color: #063f32; margin-bottom: 16px; }
+  .rel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .rel { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f8f9fa; border-radius: 8px; font-size: 13px; }
+  .rel-arrow { font-size: 18px; color: #90a4ae; }
+  .rel-label { font-size: 11px; color: #69736f; }
+  .rel-entity { font-weight: 700; }
+
+  .notes { margin-top: 24px; background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 2px solid #e0e0e0; }
+  .notes h2 { font-size: 16px; color: #063f32; margin-bottom: 12px; }
+  .notes ul { list-style: none; padding: 0; }
+  .notes li { padding: 6px 0; font-size: 13px; color: #455a64; }
+  .notes li::before { content: ""; display: inline-block; width: 8px; height: 8px; background: #d4af37; border-radius: 50%; margin-right: 10px; }
+
+  .footer { text-align: center; margin-top: 32px; font-size: 12px; color: #90a4ae; }
+  @media print { body { background: #fff; padding: 20px; } .entity, .relations, .notes { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Database Schema Diagram (ER)</h1>
+  <p class="subtitle">Yatara Ceylon &mdash; Group WE_IT_02 &mdash; MongoDB Atlas &mdash; 6 Mongoose Models</p>
+
+  <div class="schema-grid">
+
+    <!-- USER -->
+    <div class="entity c-user">
+      <div class="entity-header">
+        <span class="entity-icon">&#x1F464;</span>
+        <span class="entity-name">User</span>
+        <span class="entity-collection">users</span>
+      </div>
+      <div class="fields">
+        <div class="field"><span class="field-name">_id</span><span class="field-type">ObjectId</span><span class="badge badge-pk">PK</span></div>
+        <div class="field"><span class="field-name">name</span><span class="field-type">String</span><span class="badge badge-req">required</span></div>
+        <div class="field"><span class="field-name">email</span><span class="field-type">String</span><span class="badge badge-req">required</span><span class="badge badge-unique">unique</span></div>
+        <div class="field"><span class="field-name">phone</span><span class="field-type">String</span></div>
+        <div class="field"><span class="field-name">passwordHash</span><span class="field-type">String</span><span class="badge badge-req">required</span><span class="field-meta">select: false</span></div>
+        <div class="field"><span class="field-name">role</span><span class="field-type">String</span><span class="badge badge-enum">enum</span><span class="badge badge-idx">index</span></div>
+        <div class="field"><span class="field-name">status</span><span class="field-type">String</span><span class="badge badge-enum">enum</span><span class="badge badge-idx">index</span></div>
+        <div class="field"><span class="field-name">isDeleted</span><span class="field-type">Boolean</span><span class="badge badge-default">false</span></div>
+        <div class="field"><span class="field-name">createdAt</span><span class="field-type">Date</span><span class="field-meta">auto</span></div>
+        <div class="field"><span class="field-name">updatedAt</span><span class="field-type">Date</span><span class="field-meta">auto</span></div>
+      </div>
+    </div>
+
+    <!-- PACKAGE -->
+    <div class="entity c-package">
+      <div class="entity-header">
+        <span class="entity-icon">&#x1F4E6;</span>
+        <span class="entity-name">Package</span>
+        <span class="entity-collection">packages</span>
+      </div>
+      <div class="fields">
+        <div class="field"><span class="field-name">_id</span><span class="field-type">ObjectId</span><span class="badge badge-pk">PK</span></div>
+        <div class="field"><span class="field-name">title</span><span class="field-type">String</span><span class="badge badge-req">required</span></div>
+        <div class="field"><span class="field-name">slug</span><span class="field-type">String</span><span class="badge badge-unique">unique</span></div>
+        <div class="field"><span class="field-name">summary</span><span class="field-type">String</span><span class="badge badge-req">required</span></div>
+        <div class="field"><span class="field-name">duration</span><span class="field-type">String</span><span class="badge badge-req">required</span></div>
+        <div class="field"><span class="field-name">durationDays</span><span class="field-type">Number</span></div>
+        <div class="field"><span class="field-name">type</span><span class="field-type">String</span><span class="badge badge-enum">enum</span><span class="badge badge-idx">index</span></div>
+        <div class="field"><span class="field-name">style</span><span class="field-type">String</span><span class="badge badge-idx">index</span></div>
+        <div class="field"><span class="field-name">itinerary[]</span><span class="field-type">SubDoc</span><span class="field-meta">day, title, desc</span></div>
+        <div class="field"><span class="field-name">priceMin / Max</span><span class="field-type">Number</span><span class="badge badge-req">required</span></div>
+        <div class="field"><span class="field-name">images[]</span><span class="field-type">[String]</span></div>
+        <div class="field"><span class="field-name">highlights[]</span><span class="field-type">[String]</span></div>
+        <div class="field"><span class="field-name">isPublished</span><span class="field-type">Boolean</span><span class="badge badge-idx">index</span></div>
+        <div class="field"><span class="field-name">isDeleted</span><span class="field-type">Boolean</span><span class="badge badge-default">false</span></div>
+      </div>
+    </div>
+
+    <!-- BOOKING -->
+    <div class="entity c-booking">
+      <div class="entity-header">
+        <span class="entity-icon">&#x1F4CB;</span>
+        <span class="entity-name">Booking</span>
+        <span class="entity-collection">bookings</span>
+      </div>
+      <div class="fields">
+        <div class="field"><span class="field-name">_id</span><span class="field-type">ObjectId</span><span class="badge badge-pk">PK</span></div>
+        <div class="field"><span class="field-name">bookingNo</span><span class="field-type">String</span><span class="field-meta">auto: YC-MOB-01XXX</span></div>
+        <div class="field"><span class="field-name">customerId</span><span class="field-type">ObjectId</span><span class="badge badge-ref">ref: User</span></div>
+        <div class="field"><span class="field-name">packageId</span><span class="field-type">ObjectId</span><span class="badge badge-ref">ref: Package</span></div>
+        <div class="field"><span class="field-name">vehicleId</span><span class="field-type">ObjectId</span><span class="badge badge-ref">ref: Vehicle</span></div>
+        <div class="field"><span class="field-name">pax</span><span class="field-type">Number</span><span class="badge badge-req">required</span></div>
+        <div class="field"><span class="field-name">dates.from / to</span><span class="field-type">Date</span></div>
+        <div class="field"><span class="field-name">status</span><span class="field-type">String</span><span class="badge badge-enum">enum</span><span class="badge badge-idx">index</span></div>
+        <div class="field"><span class="field-name">totalCost</span><span class="field-type">Number</span><span class="field-meta">auto-calc</span></div>
+        <div class="field"><span class="field-name">paidAmount</span><span class="field-type">Number</span></div>
+        <div class="field"><span class="field-name">remainingBalance</span><span class="field-type">Number</span><span class="field-meta">pre-save hook</span></div>
+        <div class="field"><span class="field-name">pickupLocation</span><span class="field-type">String</span></div>
+        <div class="field"><span class="field-name">isDeleted</span><span class="field-type">Boolean</span><span class="badge badge-default">false</span></div>
+      </div>
+    </div>
+
+    <!-- VEHICLE -->
+    <div class="entity c-vehicle">
+      <div class="entity-header">
+        <span class="entity-icon">&#x1F697;</span>
+        <span class="entity-name">Vehicle</span>
+        <span class="entity-collection">vehicles</span>
+      </div>
+      <div class="fields">
+        <div class="field"><span class="field-name">_id</span><span class="field-type">ObjectId</span><span class="badge badge-pk">PK</span></div>
+        <div class="field"><span class="field-name">ownerId</span><span class="field-type">ObjectId</span><span class="badge badge-ref">ref: User</span></div>
+        <div class="field"><span class="field-name">type</span><span class="field-type">String</span><span class="badge badge-enum">enum</span><span class="field-meta">5 types</span></div>
+        <div class="field"><span class="field-name">model</span><span class="field-type">String</span><span class="badge badge-req">required</span></div>
+        <div class="field"><span class="field-name">plateNumber</span><span class="field-type">String</span></div>
+        <div class="field"><span class="field-name">seats</span><span class="field-type">Number</span><span class="badge badge-req">required</span><span class="field-meta">min: 1</span></div>
+        <div class="field"><span class="field-name">dailyRate</span><span class="field-type">Number</span><span class="badge badge-req">required</span></div>
+        <div class="field"><span class="field-name">status</span><span class="field-type">String</span><span class="badge badge-enum">enum</span><span class="badge badge-idx">index</span></div>
+        <div class="field"><span class="field-name">images[]</span><span class="field-type">[String]</span></div>
+        <div class="field"><span class="field-name">features[]</span><span class="field-type">[String]</span></div>
+        <div class="field"><span class="field-name">isDeleted</span><span class="field-type">Boolean</span><span class="badge badge-default">false</span></div>
+      </div>
+    </div>
+
+    <!-- DESTINATION -->
+    <div class="entity c-dest">
+      <div class="entity-header">
+        <span class="entity-icon">&#x1F5FA;</span>
+        <span class="entity-name">Destination</span>
+        <span class="entity-collection">destinations</span>
+      </div>
+      <div class="fields">
+        <div class="field"><span class="field-name">_id</span><span class="field-type">ObjectId</span><span class="badge badge-pk">PK</span></div>
+        <div class="field"><span class="field-name">title</span><span class="field-type">String</span><span class="badge badge-req">required</span></div>
+        <div class="field"><span class="field-name">slug</span><span class="field-type">String</span><span class="badge badge-unique">unique</span></div>
+        <div class="field"><span class="field-name">description</span><span class="field-type">String</span><span class="badge badge-req">required</span></div>
+        <div class="field"><span class="field-name">region</span><span class="field-type">String</span><span class="badge badge-idx">index</span></div>
+        <div class="field"><span class="field-name">bestSeason</span><span class="field-type">String</span></div>
+        <div class="field"><span class="field-name">idealNights</span><span class="field-type">String</span></div>
+        <div class="field"><span class="field-name">images[]</span><span class="field-type">[String]</span></div>
+        <div class="field"><span class="field-name">highlights[]</span><span class="field-type">[String]</span></div>
+        <div class="field"><span class="field-name">isPublished</span><span class="field-type">Boolean</span><span class="badge badge-idx">index</span></div>
+        <div class="field"><span class="field-name">isDeleted</span><span class="field-type">Boolean</span><span class="badge badge-default">false</span></div>
+      </div>
+    </div>
+
+    <!-- PARTNER -->
+    <div class="entity c-partner">
+      <div class="entity-header">
+        <span class="entity-icon">&#x1F91D;</span>
+        <span class="entity-name">Partner</span>
+        <span class="entity-collection">partners</span>
+      </div>
+      <div class="fields">
+        <div class="field"><span class="field-name">_id</span><span class="field-type">ObjectId</span><span class="badge badge-pk">PK</span></div>
+        <div class="field"><span class="field-name">ownerId</span><span class="field-type">ObjectId</span><span class="badge badge-ref">ref: User</span></div>
+        <div class="field"><span class="field-name">type</span><span class="field-type">String</span><span class="badge badge-enum">enum</span><span class="field-meta">4 types</span></div>
+        <div class="field"><span class="field-name">name</span><span class="field-type">String</span><span class="badge badge-req">required</span></div>
+        <div class="field"><span class="field-name">contactPerson</span><span class="field-type">String</span></div>
+        <div class="field"><span class="field-name">phone</span><span class="field-type">String</span><span class="badge badge-req">required</span></div>
+        <div class="field"><span class="field-name">email</span><span class="field-type">String</span></div>
+        <div class="field"><span class="field-name">address</span><span class="field-type">String</span></div>
+        <div class="field"><span class="field-name">status</span><span class="field-type">String</span><span class="badge badge-enum">enum</span><span class="badge badge-idx">index</span></div>
+        <div class="field"><span class="field-name">images[]</span><span class="field-type">[String]</span></div>
+        <div class="field"><span class="field-name">isDeleted</span><span class="field-type">Boolean</span><span class="badge badge-default">false</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RELATIONSHIPS -->
+  <div class="relations">
+    <h2>Entity Relationships</h2>
+    <div class="rel-grid">
+      <div class="rel">
+        <span class="rel-entity" style="color:#2e7d32">User</span>
+        <span class="rel-arrow">&xrarr;</span>
+        <span class="rel-label">1 creates many</span>
+        <span class="rel-arrow">&xrarr;</span>
+        <span class="rel-entity" style="color:#e65100">Booking</span>
+      </div>
+      <div class="rel">
+        <span class="rel-entity" style="color:#1565c0">Package</span>
+        <span class="rel-arrow">&xrarr;</span>
+        <span class="rel-label">1 booked in many</span>
+        <span class="rel-arrow">&xrarr;</span>
+        <span class="rel-entity" style="color:#e65100">Booking</span>
+      </div>
+      <div class="rel">
+        <span class="rel-entity" style="color:#6a1b9a">Vehicle</span>
+        <span class="rel-arrow">&xrarr;</span>
+        <span class="rel-label">1 assigned to many</span>
+        <span class="rel-arrow">&xrarr;</span>
+        <span class="rel-entity" style="color:#e65100">Booking</span>
+      </div>
+      <div class="rel">
+        <span class="rel-entity" style="color:#2e7d32">User</span>
+        <span class="rel-arrow">&xrarr;</span>
+        <span class="rel-label">1 owns many</span>
+        <span class="rel-arrow">&xrarr;</span>
+        <span class="rel-entity" style="color:#6a1b9a">Vehicle</span>
+      </div>
+      <div class="rel">
+        <span class="rel-entity" style="color:#2e7d32">User</span>
+        <span class="rel-arrow">&xrarr;</span>
+        <span class="rel-label">1 owns many</span>
+        <span class="rel-arrow">&xrarr;</span>
+        <span class="rel-entity" style="color:#c62828">Partner</span>
+      </div>
+      <div class="rel">
+        <span class="rel-entity" style="color:#00695c">Destination</span>
+        <span class="rel-arrow">&mdash;</span>
+        <span class="rel-label">standalone content entity</span>
+        <span class="rel-arrow">&mdash;</span>
+        <span class="rel-entity" style="color:#90a4ae">no FK refs</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="notes">
+    <h2>Schema Design Patterns</h2>
+    <ul>
+      <li><strong>Soft Deletes</strong> &mdash; All models use <code>isDeleted: Boolean</code> + <code>deletedAt: Date</code> instead of permanent removal</li>
+      <li><strong>Timestamps</strong> &mdash; All models use <code>{ timestamps: true }</code> for auto <code>createdAt</code> / <code>updatedAt</code></li>
+      <li><strong>Embedded Sub-Documents</strong> &mdash; Package.itinerary[] stores day-by-day plans as nested sub-docs (no separate collection)</li>
+      <li><strong>Pre-Save Hook</strong> &mdash; Booking auto-generates <code>bookingNo</code> (YC-MOB-01XXX) and calculates <code>remainingBalance</code></li>
+      <li><strong>Enum Constraints</strong> &mdash; Role (5 values), Vehicle type (5), Partner type (4), Booking status (8) restricted via Mongoose enum</li>
+      <li><strong>Compound Index</strong> &mdash; Package has <code>{ type: 1, style: 1 }</code> index for fast filtered queries</li>
+    </ul>
+  </div>
+
+  <p class="footer">SE2020 &mdash; SLIIT Faculty of Computing &mdash; Group WE_IT_02 &mdash; Yatara Ceylon Mobile App</p>
+</div>
+</body>
+</html>
