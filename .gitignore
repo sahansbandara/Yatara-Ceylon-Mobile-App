@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+mobile/Yatara-Ceylon/node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+!backend/.env.example
+!mobile/Yatara-Ceylon/.env.example
+
+# Uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Expo / React Native
+mobile/Yatara-Ceylon/.expo/
+mobile/Yatara-Ceylon/dist/
+mobile/Yatara-Ceylon/web-build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# OS / IDE
+.DS_Store
+.vscode/
+
+# Build artifacts
+coverage/
+build/
+dist/
+
+# Local backups
+backups/

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yatara Mobile Architecture</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f8f4ea; color: #10201b; }
+    main { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+    h1 { color: #063f32; }
+    .flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; align-items: stretch; margin-top: 34px; }
+    .box { background: #fff; border: 2px solid #d4af37; border-radius: 16px; padding: 24px; min-height: 180px; box-shadow: 0 12px 30px rgba(6,63,50,.12); }
+    .box h2 { margin-top: 0; color: #063f32; }
+    .arrow { text-align: center; color: #d4af37; font-size: 34px; font-weight: 900; margin: 24px 0; }
+    ul { padding-left: 18px; line-height: 1.7; }
+    .note { margin-top: 28px; padding: 18px; background: #063f32; color: #f8f4ea; border-radius: 12px; }
+    @media (max-width: 760px) { .flow { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Yatara Ceylon Mobile Architecture</h1>
+  <p>Assignment stack: React Native frontend, Node.js + Express backend, MongoDB database.</p>
+  <section class="flow">
+    <div class="box">
+      <h2>React Native App</h2>
+      <ul>
+        <li>Expo Router navigation</li>
+        <li>Axios API client</li>
+        <li>SecureStore JWT token</li>
+        <li>ImagePicker uploads</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Express API</h2>
+      <ul>
+        <li>RESTful routes</li>
+        <li>Controllers</li>
+        <li>JWT middleware</li>
+        <li>Multer upload middleware</li>
+        <li>Zod validation</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>MongoDB Atlas</h2>
+      <ul>
+        <li>Database: yatara-mobile</li>
+        <li>Mongoose schemas</li>
+        <li>Soft delete support</li>
+        <li>DB safety guard</li>
+      </ul>
+    </div>
+  </section>
+  <div class="arrow">Mobile HTTPS + JWT → API → MongoDB</div>
+  <div class="note">Final evaluation must use a hosted backend URL. Localhost is only for development.</div>
+</main>
+</body>
+</html>

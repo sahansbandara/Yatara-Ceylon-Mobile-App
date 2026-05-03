@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yatara Mobile Database Schema</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f8f4ea; color: #10201b; }
+    main { max-width: 1180px; margin: 0 auto; padding: 40px 24px; }
+    h1 { color: #063f32; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 28px; }
+    .entity { background: #fff; border: 1px solid #e7dfce; border-top: 7px solid #d4af37; border-radius: 14px; padding: 18px; box-shadow: 0 10px 24px rgba(6,63,50,.1); }
+    .entity h2 { color: #063f32; margin: 0 0 12px; }
+    .field { padding: 6px 0; border-bottom: 1px solid #f0eadc; font-size: 14px; }
+    .relation { margin-top: 28px; padding: 18px; background: #063f32; color: #f8f4ea; border-radius: 12px; line-height: 1.8; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Yatara Mobile Database Schema</h1>
+  <p>MongoDB Atlas database: <strong>yatara-mobile</strong></p>
+  <section class="grid">
+    <div class="entity"><h2>User</h2><div class="field">name</div><div class="field">email</div><div class="field">phone</div><div class="field">passwordHash</div><div class="field">role</div><div class="field">status</div></div>
+    <div class="entity"><h2>Package</h2><div class="field">title</div><div class="field">slug</div><div class="field">summary</div><div class="field">duration</div><div class="field">priceMin/priceMax</div><div class="field">images</div></div>
+    <div class="entity"><h2>Booking</h2><div class="field">bookingNo</div><div class="field">customerId → User</div><div class="field">packageId → Package</div><div class="field">pax</div><div class="field">dates</div><div class="field">status</div></div>
+    <div class="entity"><h2>Vehicle</h2><div class="field">type</div><div class="field">model</div><div class="field">plateNumber</div><div class="field">seats</div><div class="field">dailyRate</div><div class="field">status</div></div>
+    <div class="entity"><h2>Destination</h2><div class="field">title</div><div class="field">slug</div><div class="field">description</div><div class="field">region</div><div class="field">bestSeason</div><div class="field">images</div></div>
+    <div class="entity"><h2>Partner</h2><div class="field">type</div><div class="field">name</div><div class="field">contactPerson</div><div class="field">phone</div><div class="field">email</div><div class="field">status</div></div>
+  </section>
+  <section class="relation">
+    User 1 → many Bookings. Package 1 → many Bookings. Admin/Staff users manage Package, Booking, Vehicle, Destination, and Partner records.
+  </section>
+</main>
+</body>
+</html>
