@@ -30,7 +30,7 @@
 
 **Backend:** `models/Destination.js` · `controllers/destination.controller.js` · `routes/destination.routes.js` · `controllers/crudFactory.js`
 
-**Frontend:** `app/(tabs)/index.tsx` (destination carousel) · `app/(tabs)/build.tsx` · `app/build-tour/index.tsx` · `app/admin/destinations.tsx`
+**Frontend:** `app/(tabs)/index.tsx` (destination carousel) · `app/build-tour/index.tsx` · `app/admin/destinations.tsx`
 
 ---
 

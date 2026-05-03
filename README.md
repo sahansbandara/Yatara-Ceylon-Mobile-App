@@ -71,15 +71,29 @@ graph TB
     subgraph Mobile["📱 Mobile App (Expo + React Native)"]
         SPLASH["Splash Screen"]
         AUTH["Auth Screens (Login/Register)"]
-        HOME["Home Screen"]
-        PKG["Packages Tab"]
-        BK["Bookings Tab"]
-        PROF["Profile Tab"]
-        ADMIN["Admin Dashboard"]
+        subgraph CustomerTabs["Customer Tabs"]
+            HOME["Home Screen"]
+            PKG["Packages Tab"]
+            BK["Bookings Tab"]
+            PROF["Profile Tab"]
+        end
+        subgraph AdminTabs["Admin Tabs"]
+            ADMIN["Admin Dashboard"]
+            ADMIN_BK["Admin Bookings"]
+            ADMIN_PKG["Admin Packages"]
+        end
+        subgraph AdminStack["Admin Management"]
+            VEHICLES["Vehicles"]
+            DEST["Destinations"]
+            PARTNERS["Partners"]
+            USERS["Users"]
+        end
+        BUILD_TOUR["Build Tour"]
+        TRANSFER["Transfer Services"]
     end
 
     subgraph Backend["⚙️ Express.js API Server"]
-        ROUTES["Route Layer (auth, packages, bookings, vehicles, destinations, partners)"]
+        ROUTES["Route Layer (auth, packages, bookings, vehicles, destinations, partners, users)"]
         MW["Middleware (JWT protect, role authorize, Multer upload)"]
         CTRL["Controller Layer (auth, package, booking, vehicle, destination, partner)"]
         FACTORY["CRUD Factory (reusable controller generator)"]
@@ -93,7 +107,8 @@ graph TB
 
     SPLASH --> AUTH --> HOME
     HOME --> PKG & BK & PROF & ADMIN
-    PKG & BK & ADMIN --> |Axios + JWT Bearer| ROUTES
+    HOME --> BUILD_TOUR & TRANSFER
+    PKG & BK & ADMIN & AdminStack --> |Axios + JWT Bearer| ROUTES
     ROUTES --> MW --> CTRL
     CTRL --> FACTORY
     CTRL & FACTORY --> ZOD
@@ -117,9 +132,9 @@ graph TB
 
 | Layer | Technology | Version | Purpose |
 |-------|-----------|---------|--------|
-| **Mobile Framework** | React Native + Expo | SDK 52 | Cross-platform mobile app (iOS + Android) |
-| **Router** | Expo Router | 4.x | File-based navigation with deep linking |
-| **Language** | TypeScript | 5.x | Type-safe development across frontend and backend |
+| **Mobile Framework** | React Native 0.81 + Expo | SDK 54 | Cross-platform mobile app (iOS + Android) |
+| **Router** | Expo Router | 6.x | File-based navigation with deep linking |
+| **Language** | TypeScript | 5.9 | Type-safe development across frontend and backend |
 | **Backend** | Node.js + Express.js | 18+ / 4.x | REST API server |
 | **Database** | MongoDB Atlas + Mongoose | 8.x | Cloud document database with schema validation |
 | **Auth** | JWT (jsonwebtoken) + bcryptjs | — | Stateless authentication with password hashing |
@@ -139,6 +154,8 @@ graph TB
 - 🏖️ **Tour Package Browsing** — Browse curated Sri Lankan tour packages with pricing, highlights, and images
 - 📦 **Booking Creation** — Request bookings with passenger count, dates, and pickup location
 - 📋 **My Bookings** — Track all personal bookings with real-time status badges
+- 🛠️ **Build Your Tour** — Custom tour builder with destination and service selection
+- 🚐 **Transfer Services** — Browse and book vehicle transfer services
 - 👤 **Profile Management** — View profile, app version, and connected API endpoint
 
 ### Admin & Staff Features
@@ -148,6 +165,7 @@ graph TB
 - 🗺️ **Destination CRUD** — Manage Sri Lankan destinations with regions and best seasons
 - 🤝 **Partner CRUD** — Manage hotels, restaurants, activity providers, and suppliers
 - 📋 **Booking Management** — View all bookings, update status pipeline (NEW → COMPLETED)
+- 👥 **User Management** — Admin CRUD for user accounts, role assignment, and status control
 - 🖼️ **Image Upload** — Upload images for packages, vehicles, destinations, and partners via multipart/form-data
 
 ---
@@ -307,7 +325,8 @@ Yatara-Ceylon-Mobile-App/
 │   │   ├── booking.routes.js        #    /api/bookings
 │   │   ├── vehicle.routes.js        #    /api/vehicles
 │   │   ├── destination.routes.js    #    /api/destinations
-│   │   └── partner.routes.js        #    /api/partners
+│   │   ├── partner.routes.js        #    /api/partners
+│   │   └── user.routes.js           #    /api/users
 │   ├── scripts/
 │   │   ├── seed.js                  #    Local database seeder
 │   │   └── remote-seed.js           #    Remote API seeder (for hosted DB)
@@ -320,27 +339,44 @@ Yatara-Ceylon-Mobile-App/
 │
 ├── frontend/                        # 📱 Expo React Native App
 │   ├── app/
+│   │   ├── _layout.tsx              #    Root layout
 │   │   ├── index.tsx                #    Splash screen
 │   │   ├── auth/
+│   │   │   ├── _layout.tsx          #    Auth stack layout
 │   │   │   ├── login.tsx            #    Login form
 │   │   │   └── register.tsx         #    Registration form
 │   │   ├── (tabs)/
-│   │   │   ├── _layout.tsx          #    Tab navigator (Home, Packages, Bookings, Profile)
+│   │   │   ├── _layout.tsx          #    Customer tab navigator (Home, Packages, Bookings, Profile)
 │   │   │   ├── index.tsx            #    Home screen with carousels
 │   │   │   ├── packages.tsx         #    Package list
 │   │   │   ├── bookings.tsx         #    My Bookings list
 │   │   │   └── settings.tsx         #    Profile & logout
+│   │   ├── (admin-tabs)/
+│   │   │   ├── _layout.tsx          #    Admin tab navigator (Dashboard, Bookings, Packages, Profile)
+│   │   │   ├── index.tsx            #    Admin dashboard with stat grid
+│   │   │   ├── bookings.tsx         #    Admin booking management
+│   │   │   ├── packages.tsx         #    Admin package management
+│   │   │   └── profile.tsx          #    Admin profile
 │   │   ├── packages/
 │   │   │   └── [id].tsx             #    Package detail
 │   │   ├── booking/
 │   │   │   └── [packageId].tsx      #    Booking request form
+│   │   ├── build-tour/
+│   │   │   └── index.tsx            #    Custom tour builder
+│   │   ├── transfer/
+│   │   │   └── [service].tsx        #    Transfer service screen
 │   │   └── admin/
-│   │       ├── index.tsx            #    Admin dashboard
-│   │       ├── packages.tsx         #    Package CRUD
-│   │       ├── bookings.tsx         #    Booking management
+│   │       ├── _layout.tsx          #    Admin stack layout
 │   │       ├── vehicles.tsx         #    Vehicle CRUD
 │   │       ├── destinations.tsx     #    Destination CRUD
-│   │       └── partners.tsx         #    Partner CRUD
+│   │       ├── partners.tsx         #    Partner CRUD
+│   │       └── users.tsx            #    User management
+│   ├── assets/
+│   │   ├── images/                  #    App icons, splash screen
+│   │   ├── packages/                #    Package hero images (.webp)
+│   │   ├── districts/               #    Destination images (.webp)
+│   │   ├── vehicles/                #    Vehicle images
+│   │   └── transfers/               #    Transfer service images
 │   ├── components/yatara/
 │   │   ├── ui.tsx                   #    Reusable UI components (Card, Button, etc.)
 │   │   └── auth-guard.tsx           #    Route protection component
@@ -351,7 +387,9 @@ Yatara-Ceylon-Mobile-App/
 │   │   ├── api.ts                   #    Axios instance + bearer token interceptor
 │   │   ├── auth.tsx                 #    AuthContext + SecureStore
 │   │   ├── types.ts                 #    TypeScript interfaces
-│   │   └── upload.ts                #    Image picker + FormData helper
+│   │   ├── upload.ts                #    Image picker + FormData helper
+│   │   ├── bookingStatus.ts         #    Booking status constants
+│   │   └── tokenStorage.ts          #    Token storage helpers
 │   └── .env                         #    EXPO_PUBLIC_API_URL
 │
 ├── docs/                            # 📚 Documentation
@@ -538,6 +576,14 @@ All API endpoints are under `/api/`. Authentication uses JWT Bearer tokens in th
 | `POST` | `/api/partners` | Admin/Staff | Create partner |
 | `PUT` | `/api/partners/:id` | Admin/Staff | Update partner |
 | `DELETE` | `/api/partners/:id` | Admin/Staff | Soft delete |
+
+### Users
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|:---:|-------------|
+| `GET` | `/api/users` | Admin/Staff | List all users |
+| `POST` | `/api/users` | Admin/Staff | Create user |
+| `PUT` | `/api/users/:id` | Admin/Staff | Update user (role, status) |
 
 ---
 

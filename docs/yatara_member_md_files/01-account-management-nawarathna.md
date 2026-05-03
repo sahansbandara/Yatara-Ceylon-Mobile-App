@@ -43,11 +43,14 @@
 | File | Purpose |
 |------|---------|
 | `frontend/app/index.tsx` | Splash screen with auth redirect |
+| `frontend/app/auth/_layout.tsx` | Auth stack layout |
 | `frontend/app/auth/login.tsx` | Login form screen |
 | `frontend/app/auth/register.tsx` | Registration form screen |
 | `frontend/app/(tabs)/settings.tsx` | Profile display and logout |
+| `frontend/app/(admin-tabs)/profile.tsx` | Admin profile screen |
 | `frontend/lib/auth.tsx` | AuthContext + SecureStore token persistence |
 | `frontend/lib/api.ts` | Axios instance with bearer token interceptor |
+| `frontend/lib/tokenStorage.ts` | Token storage helpers for SecureStore |
 
 ---
 

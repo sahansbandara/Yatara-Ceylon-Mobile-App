@@ -44,7 +44,7 @@
 |------|---------|
 | `frontend/app/(tabs)/packages.tsx` | Customer package list with image cards |
 | `frontend/app/packages/[id].tsx` | Package detail with hero image, price, highlights |
-| `frontend/app/admin/packages.tsx` | Admin package CRUD screen |
+| `frontend/app/(admin-tabs)/packages.tsx` | Admin packages tab screen |
 | `frontend/lib/upload.ts` | Image picker and FormData builder |
 
 ---

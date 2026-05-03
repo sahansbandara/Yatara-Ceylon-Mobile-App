@@ -24,7 +24,7 @@
 
 **Backend:** `models/Booking.js` · `controllers/booking.controller.js` · `routes/booking.routes.js` · `utils/constants.js`
 
-**Frontend:** `app/booking/[packageId].tsx` · `app/(tabs)/bookings.tsx` · `app/admin/bookings.tsx`
+**Frontend:** `app/booking/[packageId].tsx` · `app/(tabs)/bookings.tsx` · `app/(admin-tabs)/bookings.tsx` · `lib/bookingStatus.ts`
 
 ---
 
