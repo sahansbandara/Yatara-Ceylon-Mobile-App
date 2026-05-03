@@ -14,6 +14,7 @@ This folder contains the assignment evidence for the React Native + Express + Mo
 | `MOBILE-VIVA-CHECKLIST.md` | Demo flow and viva preparation |
 | `MOBILE-FINAL-REPORT.md` | Report-ready project summary |
 | `WMT-ASSIGNMENT-COMPLIANCE.md` | Mapping from assignment requirements to implementation |
+| `SE2020-PROJECT-SUBMISSION-GUIDE.md` | Project-specific submission guide from the PDF rules |
 | `SUBMISSION-ZIP-CHECKLIST.md` | SE2020 ZIP packaging checklist |
 
 ## Member Files
