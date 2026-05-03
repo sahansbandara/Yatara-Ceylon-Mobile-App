@@ -1,13 +1,18 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { BookOpen, CalendarDays, Car, DollarSign, MapPin, Users, ChevronRight, Activity } from 'lucide-react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View, TextInput } from 'react-native';
+import { BookOpen, CalendarDays, Car, DollarSign, Users, ChevronRight, Search, Clock, Handshake } from 'lucide-react-native';
 
-import { Card, Divider, EmptyState, Screen, SectionHeader, StatusBadge } from '@/components/yatara/ui';
-import { Colors, Shadows, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { Booking } from '@/lib/types';
+
+// Theme constants specifically for the Dark Admin Dashboard
+const DARK_BG = '#0B100E';
+const DARK_CARD = '#161B19';
+const DARK_TEXT = '#F8F4EA';
+const MUTED_TEXT = '#8B9A96';
+const BORDER = '#222B28';
 
 export default function AdminDashboardScreen() {
   const { isAdmin } = useAuth();
@@ -19,7 +24,7 @@ export default function AdminDashboardScreen() {
     partners: 0,
   });
   const [totalRevenue, setTotalRevenue] = useState(0);
-  const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -47,8 +52,10 @@ export default function AdminDashboardScreen() {
         const revenue = bookingsData.reduce((sum, b) => sum + (b.totalCost || 0), 0);
         setTotalRevenue(revenue);
 
-        // Get top 3 recent bookings
-        setRecentBookings(bookingsData.slice(0, 3));
+        // Count pending
+        const pending = bookingsData.filter(b => b.status === 'NEW' || b.status === 'PAYMENT_PENDING').length;
+        setPendingCount(pending);
+
       } catch (error) {
         Alert.alert('Could not load dashboard', getApiError(error));
       }
@@ -58,150 +65,161 @@ export default function AdminDashboardScreen() {
 
   if (!isAdmin) {
     return (
-      <Screen>
-        <EmptyState text="This area is only for admin and staff accounts." />
-      </Screen>
+      <View style={[styles.screen, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: MUTED_TEXT }}>Access Denied</Text>
+      </View>
     );
   }
 
   const KPIS = [
-    { label: 'Revenue', value: `LKR ${(totalRevenue / 1000).toFixed(0)}k`, icon: DollarSign, color: '#10b981', route: '/admin/bookings' },
+    { label: 'Revenue', value: `LKR ${totalRevenue.toLocaleString()}`, icon: DollarSign, color: '#10b981', route: '/admin/bookings' },
     { label: 'Bookings', value: counts.bookings, icon: CalendarDays, color: '#3b82f6', route: '/admin/bookings' },
-    { label: 'Packages', value: counts.packages, icon: BookOpen, color: '#8b5cf6', route: '/admin/packages' },
-    { label: 'Vehicles', value: counts.vehicles, icon: Car, color: '#f59e0b', route: '/admin/vehicles' },
-    { label: 'Partners', value: counts.partners, icon: Users, color: '#14b8a6', route: '/admin/partners' },
-    { label: 'Locations', value: counts.destinations, icon: MapPin, color: '#f43f5e', route: '/admin/destinations' },
+    { label: 'Pending', value: pendingCount, icon: Clock, color: '#f59e0b', route: '/admin/bookings' },
+    { label: 'Packages', value: counts.packages, icon: BookOpen, color: '#a855f7', route: '/admin/packages' },
+    { label: 'Vehicles', value: counts.vehicles, icon: Car, color: '#8b5cf6', route: '/admin/vehicles' },
+    { label: 'Partners', value: counts.partners, icon: Handshake, color: '#14b8a6', route: '/admin/partners' },
   ];
 
-  return (
-    <Screen>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-        <SectionHeader 
-          title="Command Center" 
-          subtitle={new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} 
-        />
+  const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-        {/* KPI Grid */}
-        <View style={s.statsGrid}>
+  return (
+    <View style={styles.screen}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Command Center</Text>
+          <Text style={styles.subtitle}>{todayStr} — Overview & operations hub</Text>
+        </View>
+
+        {/* Search Bar */}
+        <View style={styles.searchBar}>
+          <Search size={16} color={MUTED_TEXT} />
+          <TextInput 
+            style={styles.searchInput}
+            placeholder="Search bookings, packages, dest..."
+            placeholderTextColor={MUTED_TEXT}
+            editable={false}
+          />
+        </View>
+
+        {/* KPI Grid - 2 Columns */}
+        <View style={styles.grid}>
           {KPIS.map((kpi, i) => {
             const Icon = kpi.icon;
             return (
               <Pressable
                 key={i}
                 style={({ pressed }) => [
-                  s.statCard,
-                  Shadows.sm,
-                  pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+                  styles.card,
+                  pressed && { opacity: 0.8 },
                 ]}
                 onPress={() => router.push(kpi.route as any)}>
-                <View style={[s.iconWrap, { backgroundColor: kpi.color + '15' }]}>
-                  <Icon size={20} color={kpi.color} />
+                
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardLabel}>{kpi.label}</Text>
+                  <View style={[styles.iconBox, { borderColor: BORDER, backgroundColor: kpi.color + '10' }]}>
+                    <Icon size={16} color={kpi.color} />
+                  </View>
                 </View>
-                <Text style={s.statValue}>{kpi.value}</Text>
-                <Text style={s.statLabel}>{kpi.label}</Text>
+                
+                <Text style={styles.cardValue} numberOfLines={1} adjustsFontSizeToFit>
+                  {kpi.value}
+                </Text>
+                
               </Pressable>
             );
           })}
         </View>
 
-        {/* Recent Bookings Panel */}
-        <View style={s.panelHeader}>
-          <Text style={s.panelTitle}>Recent Bookings</Text>
-          <Pressable onPress={() => router.push('/admin/bookings')}>
-            <Text style={s.panelAction}>View All</Text>
-          </Pressable>
-        </View>
-
-        <Card style={s.panelCard}>
-          {recentBookings.length > 0 ? (
-            recentBookings.map((booking, index) => (
-              <View key={booking._id}>
-                <Pressable 
-                  style={s.bookingRow} 
-                  onPress={() => router.push('/admin/bookings')}
-                >
-                  <View style={s.bookingLeft}>
-                    <Text style={s.bookingNo}>{booking.bookingNo}</Text>
-                    <Text style={s.bookingCustomer}>{booking.customerName || 'Customer'}</Text>
-                    <Text style={s.bookingTotal}>LKR {booking.totalCost?.toLocaleString() || '0'}</Text>
-                  </View>
-                  <View style={s.bookingRight}>
-                    <StatusBadge status={booking.status} />
-                    <ChevronRight size={16} color={Colors.muted} style={{ marginLeft: 8 }} />
-                  </View>
-                </Pressable>
-                {index < recentBookings.length - 1 && <Divider />}
-              </View>
-            ))
-          ) : (
-            <View style={s.emptyPanel}>
-              <Activity color={Colors.muted} size={24} />
-              <Text style={s.emptyText}>No recent bookings</Text>
-            </View>
-          )}
-        </Card>
-
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
-const s = StyleSheet.create({
-  statsGrid: {
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: DARK_BG,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingTop: 30,
+    paddingBottom: 60,
+  },
+  header: {
+    marginBottom: 20,
+  },
+  title: {
+    color: DARK_TEXT,
+    fontSize: 28,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+    fontFamily: 'Times New Roman', // Attempt serif fallback
+    marginBottom: 6,
+  },
+  subtitle: {
+    color: MUTED_TEXT,
+    fontSize: 13,
+    letterSpacing: 0.2,
+    lineHeight: 18,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#121715',
+    borderWidth: 1,
+    borderColor: BORDER,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 24,
+    gap: 10,
+  },
+  searchInput: {
+    color: DARK_TEXT,
+    fontSize: 14,
+    flex: 1,
+  },
+  grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 24,
-  },
-  statCard: {
-    width: '31%',
-    backgroundColor: Colors.white,
-    borderRadius: 14,
-    padding: 12,
-    alignItems: 'center',
-    gap: 4,
-    flexGrow: 1,
-    minWidth: 100,
-  },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  statValue: { color: Colors.deepEmerald, ...Typography.h3, fontSize: 20 },
-  statLabel: { color: Colors.muted, ...Typography.tiny, textTransform: 'uppercase', letterSpacing: 0.5 },
-  
-  panelHeader: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: 10,
-    paddingHorizontal: 4,
+    gap: 12,
   },
-  panelTitle: { color: Colors.deepEmerald, ...Typography.h3 },
-  panelAction: { color: Colors.antiqueGold, ...Typography.captionBold },
-  panelCard: { padding: 0, overflow: 'hidden' },
-  
-  bookingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  card: {
+    width: '48%',
+    backgroundColor: DARK_CARD,
+    borderRadius: 16,
     padding: 16,
+    borderWidth: 1,
+    borderColor: '#1D2522',
   },
-  bookingLeft: { flex: 1 },
-  bookingNo: { color: Colors.muted, ...Typography.tiny, fontFamily: undefined, letterSpacing: 0.5, marginBottom: 2 },
-  bookingCustomer: { color: Colors.ink, ...Typography.captionBold, marginBottom: 4 },
-  bookingTotal: { color: Colors.deepEmerald, ...Typography.caption, fontWeight: '700' },
-  bookingRight: { flexDirection: 'row', alignItems: 'center' },
-  
-  emptyPanel: {
-    padding: 30,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  cardLabel: {
+    color: '#D8E2DC',
+    fontSize: 14,
+    fontWeight: '500',
+    letterSpacing: 0.5,
+  },
+  iconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
   },
-  emptyText: { color: Colors.muted, ...Typography.caption },
+  cardValue: {
+    color: DARK_TEXT,
+    fontSize: 26,
+    fontWeight: '800',
+    fontFamily: 'Times New Roman', // Matches the serif look from screenshot
+    letterSpacing: -0.5,
+  },
 });
