@@ -20,6 +20,7 @@ export default function RootLayout() {
         <Stack.Screen name="(admin-tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="packages/[id]" options={{ title: 'Package Details' }} />
         <Stack.Screen name="booking/[packageId]" options={{ title: 'Booking Request' }} />
+        <Stack.Screen name="transfer/[service]" options={{ title: 'Transfer Request' }} />
         <Stack.Screen name="build-tour/index" options={{ title: 'Build Tour' }} />
         <Stack.Screen name="admin" options={{ headerShown: false }} />
       </Stack>

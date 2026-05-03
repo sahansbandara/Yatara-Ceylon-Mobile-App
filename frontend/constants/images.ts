@@ -5,46 +5,14 @@ import type { ImageSourcePropType } from 'react-native';
 export const HeroImages = {
   dawn: require('@/assets/images/heroes/journey-dawn.webp'),
   dusk: require('@/assets/images/heroes/journey-dusk.webp'),
-  backdrop: require('@/assets/images/heroes/cta-backdrop.webp'),
-  howItWorks: require('@/assets/images/heroes/how-it-works-bg.webp'),
   sustainability: require('@/assets/images/heroes/sustainability-hero.webp'),
 };
 
-export const CategoryImages = {
-  heritage: require('@/assets/images/categories/cat-heritage.webp'),
-  wildlife: require('@/assets/images/categories/cat-wildlife.webp'),
-  honeymoon: require('@/assets/images/categories/cat-honeymoon.webp'),
-  ayurveda: require('@/assets/images/categories/cat-ayurvedic.webp'),
-  hillCountry: require('@/assets/images/categories/cat-hillcountry.webp'),
-  coastal: require('@/assets/images/categories/cat-coastal.webp'),
-  bespoke: require('@/assets/images/categories/cat-bespoke.webp'),
-  ramayana: require('@/assets/images/categories/cat-ramayana.webp'),
-  adventure: require('@/assets/images/categories/package-adventure.webp'),
-};
-
 export const DestinationImages: Record<string, ImageSourcePropType> = {
-  anuradhapura: require('@/assets/districts/anuradhapura.webp'),
-  'arugam-bay': require('@/assets/districts/arugam-bay.webp'),
-  batticaloa: require('@/assets/districts/batticaloa.webp'),
-  colombo: require('@/assets/districts/colombo.webp'),
   ella: require('@/assets/districts/ella.webp'),
   galle: require('@/assets/districts/galle.webp'),
-  jaffna: require('@/assets/districts/jaffna.webp'),
-  kalpitiya: require('@/assets/districts/kalpitiya.webp'),
-  kalutara: require('@/assets/districts/kalutara.webp'),
   kandy: require('@/assets/districts/kandy.webp'),
-  kegalle: require('@/assets/districts/kegalle.webp'),
-  kurunegala: require('@/assets/districts/kurunegala.webp'),
-  mannar: require('@/assets/districts/mannar.webp'),
-  mirissa: require('@/assets/districts/mirissa.webp'),
-  moneragala: require('@/assets/districts/moneragala.webp'),
-  negombo: require('@/assets/districts/negombo.webp'),
-  'nuwara-eliya': require('@/assets/districts/nuwara-eliya.webp'),
-  polonnaruwa: require('@/assets/districts/polonnaruwa.webp'),
-  ratnapura: require('@/assets/districts/ratnapura.webp'),
   sigiriya: require('@/assets/districts/sigiriya.webp'),
-  trincomalee: require('@/assets/districts/trincomalee.webp'),
-  vavuniya: require('@/assets/districts/vavuniya.webp'),
   yala: require('@/assets/districts/yala.webp'),
 };
 
@@ -136,61 +104,3 @@ export function getVehicleImage(item: { type?: string; model?: string; images?: 
   };
   return typeFallbacks[type] || (item.images?.[0] ? { uri: item.images[0] } : VehicleImages['city-sedan']);
 }
-
-/** Tour categories pulled from the website data — used on the home screen */
-export const TOUR_CATEGORIES = [
-  {
-    title: 'Heritage Journeys',
-    promise: 'Ancient cities, sacred temples, private guide',
-    image: CategoryImages.heritage,
-    tags: ['Private Guide', 'Boutique Stays'],
-  },
-  {
-    title: 'Wildlife & Safari',
-    promise: 'Leopard country, elephant herds, private jeep',
-    image: CategoryImages.wildlife,
-    tags: ['Photography', 'Private Jeep'],
-  },
-  {
-    title: 'Honeymoon Escapes',
-    promise: 'Private villas, romantic dining, coastal sunsets',
-    image: CategoryImages.honeymoon,
-    tags: ['Romance', 'Private'],
-  },
-  {
-    title: 'Ayurveda & Wellness',
-    promise: 'Guided wellness reset, daily treatments',
-    image: CategoryImages.ayurveda,
-    tags: ['Slow Travel', 'Spa'],
-  },
-  {
-    title: 'Hill Country & Rail',
-    promise: 'Tea bungalows, scenic train, misty highlands',
-    image: CategoryImages.hillCountry,
-    tags: ['Scenic Rail', 'Couples'],
-  },
-  {
-    title: 'Coastal Serenity',
-    promise: 'Secluded beaches, whale watching',
-    image: CategoryImages.coastal,
-    tags: ['Beach', 'Luxury'],
-  },
-  {
-    title: 'Adventure & Highlands',
-    promise: 'Misty peaks, wild rivers, refined escapes',
-    image: CategoryImages.adventure,
-    tags: ['Adventure', 'Highlands'],
-  },
-  {
-    title: 'Ramayana Trail',
-    promise: 'Sacred temples, spiritual heritage',
-    image: CategoryImages.ramayana,
-    tags: ['Heritage', 'Spiritual'],
-  },
-  {
-    title: 'Bespoke Tour',
-    promise: 'Tell us your dates. We build the itinerary.',
-    image: CategoryImages.bespoke,
-    tags: ['Tailor-Made', 'Concierge'],
-  },
-];

@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button, Field } from '@/components/yatara/ui';
 import { HeroImages } from '@/constants/images';
@@ -9,23 +9,47 @@ import { Colors, Typography } from '@/constants/theme';
 import { getApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+function passwordCategoryCount(value: string) {
+  return [
+    /[A-Za-z]/.test(value),
+    /\d/.test(value),
+    /[^A-Za-z0-9]/.test(value),
+  ].filter(Boolean).length;
+}
+
+function getPasswordStrength(value: string) {
+  const categories = passwordCategoryCount(value);
+  if (!value) return { label: 'Password strength', color: Colors.muted, detail: 'Use 8+ characters with at least 2 of letters, numbers, symbols.' };
+  if (value.length >= 10 && categories === 3) return { label: 'Strong', color: Colors.success, detail: 'Good password for the demo account.' };
+  if (value.length >= 8 && categories >= 2) return { label: 'Medium', color: Colors.antiqueGold, detail: 'Accepted. Add all 3 types for a stronger password.' };
+  return { label: 'Weak', color: Colors.danger, detail: 'Need 8+ characters and at least 2 of letters, numbers, symbols.' };
+}
+
 export default function RegisterScreen() {
   const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phoneDigits, setPhoneDigits] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const passwordStrength = getPasswordStrength(password);
 
   async function submit() {
     if (name.trim().length < 2) { Alert.alert('Invalid name', 'Name must be at least 2 characters.'); return; }
-    if (!email.includes('@')) { Alert.alert('Invalid email', 'Enter a valid email address.'); return; }
-    if (phone.trim().length < 7) { Alert.alert('Invalid phone', 'Enter a valid phone number.'); return; }
-    if (password.length < 8) { Alert.alert('Weak password', 'Password must be at least 8 characters.'); return; }
+    if (!isValidEmail(email)) { Alert.alert('Invalid email', 'Enter a valid email address like you@example.com.'); return; }
+    if (!/^\d{9}$/.test(phoneDigits)) { Alert.alert('Invalid phone', 'Enter exactly 9 digits after +94. Example: 771234567.'); return; }
+    if (password.length < 8 || passwordCategoryCount(password) < 2) {
+      Alert.alert('Weak password', 'Password must be at least 8 characters and include at least 2 of letters, numbers, and symbols.');
+      return;
+    }
 
     try {
       setLoading(true);
-      await register({ name, email, phone, password });
+      await register({ name: name.trim(), email: email.trim(), phone: `+94${phoneDigits}`, password });
       router.replace('/(tabs)');
     } catch (error) {
       Alert.alert('Registration failed', getApiError(error));
@@ -61,8 +85,29 @@ export default function RegisterScreen() {
           <View style={s.formCard}>
             <Field label="Full Name" value={name} onChangeText={setName} placeholder="Sahan Bandara" />
             <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="you@example.com" />
-            <Field label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+94 77 123 4567" />
+            <View style={s.fieldWrap}>
+              <Text style={s.fieldLabel}>Phone</Text>
+              <View style={s.phoneRow}>
+                <View style={s.phonePrefix}>
+                  <Text style={s.phonePrefixText}>+94</Text>
+                </View>
+                <TextInput
+                  value={phoneDigits}
+                  onChangeText={(value) => setPhoneDigits(value.replace(/\D/g, '').slice(0, 9))}
+                  keyboardType="number-pad"
+                  placeholder="771234567"
+                  placeholderTextColor={Colors.mutedLight}
+                  maxLength={9}
+                  style={s.phoneInput}
+                />
+              </View>
+              <Text style={s.helpText}>Enter 9 digits only after +94.</Text>
+            </View>
             <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry placeholder="Min. 8 characters" />
+            <View style={s.strengthRow}>
+              <Text style={[s.strengthLabel, { color: passwordStrength.color }]}>{passwordStrength.label}</Text>
+              <Text style={s.strengthHelp}>{passwordStrength.detail}</Text>
+            </View>
             <Button title="Create Account" onPress={submit} loading={loading} />
             <View style={s.footer}>
               <Text style={s.footerText}>Already a member? </Text>
@@ -91,6 +136,31 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
+  fieldWrap: { marginBottom: 14 },
+  fieldLabel: { color: Colors.deepEmerald, ...Typography.captionBold, marginBottom: 6 },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    backgroundColor: Colors.white,
+    overflow: 'hidden',
+  },
+  phonePrefix: {
+    alignSelf: 'stretch',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    backgroundColor: Colors.offWhite,
+    borderRightWidth: 1,
+    borderRightColor: Colors.border,
+  },
+  phonePrefixText: { color: Colors.deepEmerald, ...Typography.bodyBold },
+  phoneInput: { flex: 1, color: Colors.ink, ...Typography.body, paddingHorizontal: 14, paddingVertical: 12 },
+  helpText: { color: Colors.muted, ...Typography.tiny, marginTop: 5 },
+  strengthRow: { marginTop: -6, marginBottom: 16 },
+  strengthLabel: { ...Typography.captionBold, marginBottom: 4 },
+  strengthHelp: { color: Colors.muted, ...Typography.tiny },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 16 },
   footerText: { color: Colors.muted, ...Typography.caption },
   footerLink: { color: Colors.deepEmerald, ...Typography.captionBold },

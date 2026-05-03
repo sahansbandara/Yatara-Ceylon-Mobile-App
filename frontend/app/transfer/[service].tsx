@@ -1,14 +1,30 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button, Card, Field } from '@/components/yatara/ui';
-import { getPackageImage } from '@/constants/images';
 import { Colors, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { PackageItem } from '@/lib/types';
+
+const TRANSFER_META: Record<string, { title: string; subtitle: string; image: number }> = {
+  airport: {
+    title: 'Airport Pickup',
+    subtitle: 'Arrivals and departures with meet-and-greet support',
+    image: require('@/assets/transfers/cat-chauffeur.webp'),
+  },
+  intercity: {
+    title: 'Intercity Transfer',
+    subtitle: 'Private transfers between Colombo, Kandy, Galle and Ella',
+    image: require('@/assets/transfers/route-kandy-day.webp'),
+  },
+  hourly: {
+    title: 'Hourly Chauffeur',
+    subtitle: 'Reserve a driver and vehicle for flexible city travel',
+    image: require('@/assets/transfers/route-colombo-hourly.webp'),
+  },
+};
 
 function formatDate(date: Date) {
   const year = date.getFullYear();
@@ -47,25 +63,24 @@ function monthLabel(date: Date) {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
-export default function BookingRequestScreen() {
-  const { packageId } = useLocalSearchParams<{ packageId: string }>();
+function isValidLocation(value: string) {
+  const trimmed = value.trim();
+  return trimmed.length >= 3 && /[A-Za-z]/.test(trimmed);
+}
+
+export default function TransferRequestScreen() {
+  const { service } = useLocalSearchParams<{ service: string }>();
   const { user } = useAuth();
-  const [pkg, setPkg] = useState<PackageItem | null>(null);
+  const meta = TRANSFER_META[service || ''] || TRANSFER_META.airport;
   const [name, setName] = useState(user?.name || '');
   const [phoneDigits, setPhoneDigits] = useState(normalizeSriLankanLocalPhone(user?.phone));
   const [travelDate, setTravelDate] = useState(formatDate(minimumTravelDate()));
   const [calendarMonth, setCalendarMonth] = useState(startOfMonth(minimumTravelDate()));
   const [travelers, setTravelers] = useState('2');
   const [pickupLocation, setPickupLocation] = useState('');
+  const [dropoffLocation, setDropoffLocation] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!packageId) return;
-    api.get(`/packages/${packageId}`)
-      .then((response) => setPkg(response.data.data))
-      .catch((error) => Alert.alert('Could not load package', getApiError(error)));
-  }, [packageId]);
 
   async function submit() {
     if (!name.trim()) {
@@ -76,13 +91,9 @@ export default function BookingRequestScreen() {
       Alert.alert('Invalid phone', 'Enter exactly 9 digits after +94. Example: 771234567.');
       return;
     }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(travelDate)) {
-      Alert.alert('Invalid date', 'Travel date must use YYYY-MM-DD format.');
-      return;
-    }
     const selectedDate = new Date(`${travelDate}T00:00:00`);
     const minDate = minimumTravelDate();
-    if (Number.isNaN(selectedDate.getTime()) || selectedDate < minDate) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(travelDate) || Number.isNaN(selectedDate.getTime()) || selectedDate < minDate) {
       Alert.alert('Invalid travel date', `Travel date must be ${formatDate(minDate)} or later.`);
       return;
     }
@@ -90,26 +101,31 @@ export default function BookingRequestScreen() {
       Alert.alert('Required', 'Number of travelers must be at least 1.');
       return;
     }
-    if (!pickupLocation.trim()) {
-      Alert.alert('Required', 'Enter a pickup location.');
+    if (!isValidLocation(pickupLocation)) {
+      Alert.alert('Invalid pickup location', 'Pickup location must be a text location with at least 3 characters.');
+      return;
+    }
+    if (!isValidLocation(dropoffLocation)) {
+      Alert.alert('Invalid drop-off location', 'Drop-off location must be a text location with at least 3 characters.');
       return;
     }
 
     try {
       setLoading(true);
       await api.post('/bookings', {
-        packageId,
         customerName: name.trim(),
         phone: `+94${phoneDigits}`,
+        type: 'TRANSFER',
         pax: Number(travelers),
         dateFrom: travelDate,
-        pickupLocation: pickupLocation.trim(),
-        notes: notes.trim(),
+        pickupLocation: `${pickupLocation.trim()} to ${dropoffLocation.trim()}`,
+        notes: `${meta.title}. ${notes.trim()}`.trim(),
+        totalCost: 0,
       });
-      Alert.alert('Booking Submitted', 'Your booking is now visible in My Bookings.');
+      Alert.alert('Transfer Requested', 'Your transfer request is now visible in My Bookings.');
       router.replace('/(tabs)/bookings');
     } catch (error) {
-      Alert.alert('Booking failed', getApiError(error));
+      Alert.alert('Transfer request failed', getApiError(error));
     } finally {
       setLoading(false);
     }
@@ -118,12 +134,12 @@ export default function BookingRequestScreen() {
   return (
     <View style={s.container}>
       <View style={s.headerWrap}>
-        {pkg ? <Image source={getPackageImage(pkg)} style={s.headerImage} resizeMode="cover" /> : null}
+        <Image source={meta.image} style={s.headerImage} resizeMode="cover" />
         <LinearGradient colors={['rgba(6,63,50,0.2)', 'rgba(6,63,50,0.95)']} style={StyleSheet.absoluteFillObject} />
         <View style={s.headerContent}>
-          <Text style={s.kicker}>REQUEST BOOKING</Text>
-          <Text style={s.headerTitle}>{pkg?.title || 'Package Booking'}</Text>
-          <Text style={s.headerSub}>{pkg ? `${pkg.duration} | From LKR ${pkg.priceMin?.toLocaleString()}` : 'Create your travel request'}</Text>
+          <Text style={s.kicker}>TRANSFER REQUEST</Text>
+          <Text style={s.headerTitle}>{meta.title}</Text>
+          <Text style={s.headerSub}>{meta.subtitle}</Text>
         </View>
       </View>
 
@@ -131,9 +147,9 @@ export default function BookingRequestScreen() {
         <ScrollView contentContainerStyle={s.formArea} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <Card>
             <View style={s.fieldWrap}>
-              <Text style={s.fieldLabel}>Package</Text>
+              <Text style={s.fieldLabel}>Transfer Service</Text>
               <View style={s.fixedField}>
-                <Text style={s.fixedFieldText}>{pkg?.title || 'Loading package...'}</Text>
+                <Text style={s.fixedFieldText}>{meta.title}</Text>
               </View>
             </View>
             <Field label="Full Name" value={name} onChangeText={setName} placeholder="Full name" />
@@ -164,11 +180,12 @@ export default function BookingRequestScreen() {
               onSelect={setTravelDate}
             />
             <Field label="Number of Travelers" value={travelers} onChangeText={setTravelers} keyboardType="numeric" placeholder="2" />
-            <Field label="Pickup Location" value={pickupLocation} onChangeText={setPickupLocation} placeholder="Colombo Airport / Hotel name" />
-            <Field label="Special Notes" value={notes} onChangeText={setNotes} multiline placeholder="Dietary needs, celebrations, preferred route" />
+            <Field label="Pickup Location" value={pickupLocation} onChangeText={setPickupLocation} placeholder="Airport / hotel / city" />
+            <Field label="Drop-off Location" value={dropoffLocation} onChangeText={setDropoffLocation} placeholder="Destination" />
+            <Field label="Special Notes" value={notes} onChangeText={setNotes} multiline placeholder="Flight number, luggage, vehicle preference" />
           </Card>
 
-          <Button title="Submit Booking" onPress={submit} loading={loading} />
+          <Button title="Submit Transfer Request" onPress={submit} loading={loading} />
           <Button title="Cancel" variant="secondary" onPress={() => router.back()} />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -261,32 +278,10 @@ const s = StyleSheet.create({
   formArea: { padding: 20, gap: 12, paddingBottom: 36 },
   fieldWrap: { marginBottom: 14 },
   fieldLabel: { color: Colors.deepEmerald, ...Typography.captionBold, marginBottom: 6 },
-  fixedField: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    backgroundColor: Colors.offWhite,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-  },
+  fixedField: { borderWidth: 1, borderColor: Colors.border, borderRadius: 12, backgroundColor: Colors.offWhite, paddingHorizontal: 14, paddingVertical: 13 },
   fixedFieldText: { color: Colors.deepEmerald, ...Typography.bodyBold },
-  phoneRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    backgroundColor: Colors.white,
-    overflow: 'hidden',
-  },
-  phonePrefix: {
-    alignSelf: 'stretch',
-    justifyContent: 'center',
-    paddingHorizontal: 14,
-    backgroundColor: Colors.offWhite,
-    borderRightWidth: 1,
-    borderRightColor: Colors.border,
-  },
+  phoneRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: Colors.border, borderRadius: 12, backgroundColor: Colors.white, overflow: 'hidden' },
+  phonePrefix: { alignSelf: 'stretch', justifyContent: 'center', paddingHorizontal: 14, backgroundColor: Colors.offWhite, borderRightWidth: 1, borderRightColor: Colors.border },
   phonePrefixText: { color: Colors.deepEmerald, ...Typography.bodyBold },
   phoneInput: { flex: 1, color: Colors.ink, ...Typography.body, paddingHorizontal: 14, paddingVertical: 12 },
   helpText: { color: Colors.muted, ...Typography.tiny, marginTop: 5 },

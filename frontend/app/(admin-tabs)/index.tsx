@@ -1,18 +1,17 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { BookOpen, CalendarDays, Car, CheckCircle2, Clock, Handshake, MapPin, Plus, RefreshCw, Users } from 'lucide-react-native';
+import { BookOpen, CalendarDays, Car, CheckCircle2, Clock, Handshake, Plus, RefreshCw, Users } from 'lucide-react-native';
 
 import { Colors, Shadows, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { toVivaStatus } from '@/lib/bookingStatus';
-import { AdminUser, Booking, Destination, PackageItem, Partner, Vehicle } from '@/lib/types';
+import { AdminUser, Booking, PackageItem, Partner, Vehicle } from '@/lib/types';
 
 export default function AdminHomeScreen() {
   const [packages, setPackages] = useState<PackageItem[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [destinations, setDestinations] = useState<Destination[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
@@ -23,15 +22,13 @@ export default function AdminHomeScreen() {
       api.get('/packages'),
       api.get('/bookings'),
       api.get('/vehicles'),
-      api.get('/destinations'),
       api.get('/partners'),
       api.get('/users'),
     ])
-      .then(([packageRes, bookingRes, vehicleRes, destinationRes, partnerRes, userRes]) => {
+      .then(([packageRes, bookingRes, vehicleRes, partnerRes, userRes]) => {
         setPackages(packageRes.data.data);
         setBookings(bookingRes.data.data);
         setVehicles(vehicleRes.data.data);
-        setDestinations(destinationRes.data.data);
         setPartners(partnerRes.data.data);
         setUsers(userRes.data.data);
       })
@@ -66,12 +63,12 @@ export default function AdminHomeScreen() {
             </View>
 
             <View style={s.kpiGrid}>
-              <Kpi label="Total Packages" value={packages.length} icon={<BookOpen color={Colors.antiqueGold} size={20} />} />
-              <Kpi label="Total Bookings" value={bookings.length} icon={<CalendarDays color={Colors.info} size={20} />} />
-              <Kpi label="Pending Bookings" value={pendingBookings} icon={<Clock color={Colors.warning} size={20} />} />
-              <Kpi label="Active Transfers" value={activeTransfers} icon={<Car color={Colors.success} size={20} />} />
-              <Kpi label="Pending Users" value={pendingUsers} icon={<Users color={Colors.warning} size={20} />} />
-              <Kpi label="Pending Partners" value={pendingPartners} icon={<Handshake color={Colors.warning} size={20} />} />
+              <Kpi label="Total Packages" value={packages.length} icon={<BookOpen color={Colors.antiqueGold} size={20} />} onPress={() => router.push('/(admin-tabs)/packages')} />
+              <Kpi label="Total Bookings" value={bookings.length} icon={<CalendarDays color={Colors.info} size={20} />} onPress={() => router.push('/(admin-tabs)/bookings')} />
+              <Kpi label="Pending Bookings" value={pendingBookings} icon={<Clock color={Colors.warning} size={20} />} onPress={() => router.push('/(admin-tabs)/bookings')} />
+              <Kpi label="Active Transfers" value={activeTransfers} icon={<Car color={Colors.success} size={20} />} onPress={() => router.push('/admin/vehicles' as any)} />
+              <Kpi label="Pending Users" value={pendingUsers} icon={<Users color={Colors.warning} size={20} />} onPress={() => router.push('/admin/users' as any)} />
+              <Kpi label="Pending Partners" value={pendingPartners} icon={<Handshake color={Colors.warning} size={20} />} onPress={() => router.push('/admin/partners' as any)} />
             </View>
 
             <Text style={s.sectionTitle}>Quick Actions</Text>
@@ -82,16 +79,6 @@ export default function AdminHomeScreen() {
               <Action label="Add Transfer" icon={<Car color={Colors.white} size={18} />} onPress={() => router.push('/admin/vehicles' as any)} />
               <Action label="Approve Users" icon={<Users color={Colors.white} size={18} />} onPress={() => router.push('/admin/users' as any)} />
               <Action label="Manage Partners" icon={<Handshake color={Colors.white} size={18} />} onPress={() => router.push('/admin/partners' as any)} />
-            </View>
-
-            <Text style={s.sectionTitle}>Demo Data Coverage</Text>
-            <View style={s.coverageGrid}>
-              <Coverage label="Packages" value={packages.length} icon={<BookOpen color={Colors.antiqueGold} size={15} />} />
-              <Coverage label="Bookings" value={bookings.length} icon={<CalendarDays color={Colors.antiqueGold} size={15} />} />
-              <Coverage label="Vehicles" value={vehicles.length} icon={<Car color={Colors.antiqueGold} size={15} />} />
-              <Coverage label="Destinations" value={destinations.length} icon={<MapPin color={Colors.antiqueGold} size={15} />} />
-              <Coverage label="Partners" value={partners.length} icon={<Handshake color={Colors.antiqueGold} size={15} />} />
-              <Coverage label="Users" value={users.length} icon={<Users color={Colors.antiqueGold} size={15} />} />
             </View>
 
             <Text style={s.sectionTitle}>Recent Bookings</Text>
@@ -120,13 +107,13 @@ export default function AdminHomeScreen() {
   );
 }
 
-function Kpi({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
+function Kpi({ label, value, icon, onPress }: { label: string; value: number; icon: React.ReactNode; onPress: () => void }) {
   return (
-    <View style={[s.kpiCard, Shadows.sm]}>
+    <Pressable onPress={onPress} style={({ pressed }) => [s.kpiCard, Shadows.sm, pressed && { opacity: 0.82 }]}>
       <View style={s.kpiIcon}>{icon}</View>
       <Text style={s.kpiValue}>{value}</Text>
       <Text style={s.kpiLabel}>{label}</Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -136,16 +123,6 @@ function Action({ label, icon, onPress }: { label: string; icon: React.ReactNode
       {icon}
       <Text style={s.actionText}>{label}</Text>
     </Pressable>
-  );
-}
-
-function Coverage({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
-  return (
-    <View style={s.coverageCard}>
-      {icon}
-      <Text style={s.coverageValue}>{value}</Text>
-      <Text style={s.coverageLabel}>{label}</Text>
-    </View>
   );
 }
 
@@ -195,19 +172,6 @@ const s = StyleSheet.create({
     gap: 10,
   },
   actionText: { color: Colors.white, ...Typography.captionBold },
-  coverageGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  coverageCard: {
-    width: '31%',
-    backgroundColor: '#161B19',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#222B28',
-    padding: 12,
-    alignItems: 'center',
-    gap: 5,
-  },
-  coverageValue: { color: Colors.white, fontSize: 18, fontWeight: '900' },
-  coverageLabel: { color: '#8B9A96', ...Typography.tiny },
   bookingRow: {
     backgroundColor: '#161B19',
     borderRadius: 14,

@@ -3,11 +3,21 @@ const { z } = require('zod');
 const User = require('../models/User');
 const { signToken } = require('../utils/tokens');
 
+function passwordCategoryCount(value) {
+  return [
+    /[A-Za-z]/.test(value),
+    /\d/.test(value),
+    /[^A-Za-z0-9]/.test(value),
+  ].filter(Boolean).length;
+}
+
 const registerSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  phone: z.string().min(7).optional(),
-  password: z.string().min(8),
+  phone: z.string().regex(/^\+94\d{9}$/, 'Phone must use +94 followed by 9 digits'),
+  password: z.string()
+    .min(8)
+    .refine((value) => passwordCategoryCount(value) >= 2, 'Password must include at least two of letters, numbers, and symbols'),
   role: z.enum(['USER', 'VEHICLE_OWNER', 'HOTEL_OWNER']).default('USER'),
 });
 

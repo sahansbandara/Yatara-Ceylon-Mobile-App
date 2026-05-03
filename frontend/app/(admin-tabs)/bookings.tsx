@@ -40,6 +40,15 @@ function getRelationId(value?: Vehicle | Partner | string) {
   return typeof value === 'string' ? value : value._id;
 }
 
+function getRelationName(value?: Vehicle | Partner | string) {
+  if (!value) return 'Not assigned';
+  if (typeof value === 'string') return 'Assigned';
+  if ('model' in value) {
+    return `${value.model}${value.plateNumber ? ` (${value.plateNumber})` : ''}`;
+  }
+  return value.name;
+}
+
 function AssignmentSelector({
   label,
   emptyLabel,
@@ -76,6 +85,15 @@ function AssignmentSelector({
           );
         })}
       </ScrollView>
+    </View>
+  );
+}
+
+function AssignmentLine({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={s.assignmentLine}>
+      <Text style={s.assignmentLineLabel}>{label}</Text>
+      <Text style={s.assignmentLineValue}>{value}</Text>
     </View>
   );
 }
@@ -120,11 +138,16 @@ export default function AdminBookingsScreen() {
 
   useFocusEffect(load);
 
-  async function setStatus(id: string, status: string, includeAssignments = false) {
+  async function setStatus(item: Booking, status: string, includeAssignments = false) {
     try {
-      await api.put(`/bookings/${id}/status`, {
+      const itemAssignments = assignments[item._id] || {};
+      const assignmentPayload = item.type === 'TRANSFER'
+        ? { vehicleId: itemAssignments.vehicleId }
+        : itemAssignments;
+
+      await api.put(`/bookings/${item._id}/status`, {
         status,
-        ...(includeAssignments ? assignments[id] || {} : {}),
+        ...(includeAssignments ? assignmentPayload : {}),
       });
       load();
     } catch (error) {
@@ -227,6 +250,8 @@ export default function AdminBookingsScreen() {
         renderItem={({ item }) => {
           const vivaStatus = toVivaStatus(item.status);
           const statusColor = STATUS_COLORS[item.status] || { bg: MUTED + '20', text: MUTED };
+          const canAssign = item.status === 'NEW' || item.status === 'PAYMENT_PENDING';
+          const isTransferBooking = item.type === 'TRANSFER';
           return (
             <View style={s.card}>
               {/* Top Row: Booking No + Status */}
@@ -268,45 +293,71 @@ export default function AdminBookingsScreen() {
                 </View>
               </View>
 
-              <View style={s.assignmentBox}>
-                <Text style={s.assignmentTitle}>OPTIONAL ASSIGNMENTS</Text>
-                <Text style={s.assignmentHelp}>Assign vehicle and hotel/supplier before confirming if needed.</Text>
-                <AssignmentSelector
-                  label="Vehicle"
-                  emptyLabel="No Vehicle"
-                  value={assignments[item._id]?.vehicleId}
-                  options={vehicles.map((vehicle) => ({
-                    id: vehicle._id,
-                    label: `${vehicle.model}${vehicle.plateNumber ? ` (${vehicle.plateNumber})` : ''}`,
-                  }))}
-                  onChange={(value) => updateAssignment(item._id, 'vehicleId', value)}
-                />
-                <AssignmentSelector
-                  label="Hotel Partner"
-                  emptyLabel="No Hotel"
-                  value={assignments[item._id]?.hotelPartnerId}
-                  options={hotels.map((partner) => ({ id: partner._id, label: partner.name }))}
-                  onChange={(value) => updateAssignment(item._id, 'hotelPartnerId', value)}
-                />
-                <AssignmentSelector
-                  label="Supplier"
-                  emptyLabel="No Supplier"
-                  value={assignments[item._id]?.supplierPartnerId}
-                  options={suppliers.map((partner) => ({ id: partner._id, label: `${partner.name} (${partner.type})` }))}
-                  onChange={(value) => updateAssignment(item._id, 'supplierPartnerId', value)}
-                />
-              </View>
+              {canAssign ? (
+                <View style={s.assignmentBox}>
+                  <Text style={s.assignmentTitle}>OPTIONAL ASSIGNMENTS</Text>
+                  <Text style={s.assignmentHelp}>
+                    {isTransferBooking
+                      ? 'Assign only a vehicle for transfer requests before confirming.'
+                      : 'Assign vehicle and hotel/supplier before confirming if needed.'}
+                  </Text>
+                  <AssignmentSelector
+                    label="Vehicle"
+                    emptyLabel="No Vehicle"
+                    value={assignments[item._id]?.vehicleId}
+                    options={vehicles.map((vehicle) => ({
+                      id: vehicle._id,
+                      label: `${vehicle.model}${vehicle.plateNumber ? ` (${vehicle.plateNumber})` : ''}`,
+                    }))}
+                    onChange={(value) => updateAssignment(item._id, 'vehicleId', value)}
+                  />
+                  {!isTransferBooking ? (
+                    <>
+                      <AssignmentSelector
+                        label="Hotel Partner"
+                        emptyLabel="No Hotel"
+                        value={assignments[item._id]?.hotelPartnerId}
+                        options={hotels.map((partner) => ({ id: partner._id, label: partner.name }))}
+                        onChange={(value) => updateAssignment(item._id, 'hotelPartnerId', value)}
+                      />
+                      <AssignmentSelector
+                        label="Supplier"
+                        emptyLabel="No Supplier"
+                        value={assignments[item._id]?.supplierPartnerId}
+                        options={suppliers.map((partner) => ({ id: partner._id, label: `${partner.name} (${partner.type})` }))}
+                        onChange={(value) => updateAssignment(item._id, 'supplierPartnerId', value)}
+                      />
+                    </>
+                  ) : null}
+                </View>
+              ) : (
+                <View style={s.assignmentBox}>
+                  <Text style={s.assignmentTitle}>ASSIGNMENTS LOCKED</Text>
+                  <Text style={s.assignmentHelp}>
+                    {isTransferBooking
+                      ? 'Vehicle cannot be changed after confirmation.'
+                      : 'Vehicle, hotel, and supplier cannot be changed after confirmation.'}
+                  </Text>
+                  <AssignmentLine label="Vehicle" value={getRelationName(item.vehicleId)} />
+                  {!isTransferBooking ? (
+                    <>
+                      <AssignmentLine label="Hotel" value={getRelationName(item.hotelPartnerId)} />
+                      <AssignmentLine label="Supplier" value={getRelationName(item.supplierPartnerId)} />
+                    </>
+                  ) : null}
+                </View>
+              )}
 
               {/* Action Buttons */}
               {item.status !== 'COMPLETED' && item.status !== 'CANCELLED' ? (
                 <View style={s.actionRow}>
                   {item.status === 'NEW' || item.status === 'PAYMENT_PENDING' ? (
-                    <Pressable style={s.confirmBtn} onPress={() => setStatus(item._id, 'CONFIRMED', true)}>
+                    <Pressable style={s.confirmBtn} onPress={() => setStatus(item, 'CONFIRMED', true)}>
                       <Text style={s.confirmBtnText}>Confirm + Assign</Text>
                     </Pressable>
                   ) : null}
                   {item.status === 'CONFIRMED' || item.status === 'ASSIGNED' || item.status === 'IN_PROGRESS' ? (
-                    <Pressable style={s.completeBtn} onPress={() => setStatus(item._id, 'COMPLETED')}>
+                    <Pressable style={s.completeBtn} onPress={() => setStatus(item, 'COMPLETED')}>
                       <Text style={s.completeBtnText}>Complete</Text>
                     </Pressable>
                   ) : null}
@@ -315,7 +366,7 @@ export default function AdminBookingsScreen() {
                     onPress={() =>
                       Alert.alert('Cancel Booking', 'Mark this booking as cancelled?', [
                         { text: 'No' },
-                        { text: 'Yes', style: 'destructive', onPress: () => setStatus(item._id, 'CANCELLED') },
+                        { text: 'Yes', style: 'destructive', onPress: () => setStatus(item, 'CANCELLED') },
                       ])
                     }>
                     <Text style={s.cancelBtnText}>Cancel</Text>
@@ -375,6 +426,9 @@ const s = StyleSheet.create({
   selectorPillActive: { backgroundColor: EMERALD, borderColor: '#0a4d3d' },
   selectorText: { color: MUTED, fontSize: 11, fontWeight: '700' },
   selectorTextActive: { color: GOLD },
+  assignmentLine: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingVertical: 5 },
+  assignmentLineLabel: { color: MUTED, fontSize: 11, fontWeight: '800' },
+  assignmentLineValue: { color: DARK_TEXT, fontSize: 11, fontWeight: '700', flex: 1, textAlign: 'right' },
 
   actionRow: { flexDirection: 'row', gap: 10, marginTop: 16, flexWrap: 'wrap' },
   confirmBtn: { backgroundColor: EMERALD, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18 },

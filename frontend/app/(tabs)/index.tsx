@@ -13,18 +13,21 @@ import { Booking, PackageItem } from '@/lib/types';
 
 const TRANSFERS = [
   {
+    key: 'airport',
     title: 'Airport Pickup',
     subtitle: 'Arrivals and departures with meet-and-greet support',
     image: require('@/assets/transfers/cat-chauffeur.webp'),
     icon: Plane,
   },
   {
+    key: 'intercity',
     title: 'Intercity Transfer',
     subtitle: 'Private transfers between Colombo, Kandy, Galle and Ella',
     image: require('@/assets/transfers/route-kandy-day.webp'),
     icon: Route,
   },
   {
+    key: 'hourly',
     title: 'Hourly Chauffeur',
     subtitle: 'Reserve a driver and vehicle for flexible city travel',
     image: require('@/assets/transfers/route-colombo-hourly.webp'),
@@ -112,7 +115,7 @@ export default function HomeScreen() {
                     title="Request Transfer"
                     variant="secondary"
                     fullWidth={false}
-                    onPress={() => router.push('/(tabs)/packages')}
+                    onPress={() => router.push(`/transfer/${item.key}`)}
                   />
                 </View>
               </View>
