@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View, TextInput } from 'react-native';
-import { BookOpen, CalendarDays, Car, DollarSign, Users, ChevronRight, Search, Clock, Handshake } from 'lucide-react-native';
+import { BookOpen, CalendarDays, Car, DollarSign, Users, ChevronLeft, Search, Clock, Handshake, LogOut } from 'lucide-react-native';
 
 import { api, getApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -15,7 +15,7 @@ const MUTED_TEXT = '#8B9A96';
 const BORDER = '#222B28';
 
 export default function AdminDashboardScreen() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, logout } = useAuth();
   const [counts, setCounts] = useState<Record<string, number>>({
     packages: 0,
     bookings: 0,
@@ -62,6 +62,11 @@ export default function AdminDashboardScreen() {
     }
     load();
   }, [isAdmin]);
+
+  async function signOut() {
+    await logout();
+    router.replace('/auth/login');
+  }
 
   if (!isAdmin) {
     return (
@@ -133,6 +138,18 @@ export default function AdminDashboardScreen() {
         </View>
 
       </ScrollView>
+
+      {/* Bottom Buttons */}
+      <View style={styles.bottomContainer}>
+        <Pressable style={styles.bottomButton} onPress={() => router.replace('/(tabs)')}>
+          <ChevronLeft size={18} color={MUTED_TEXT} />
+          <Text style={styles.bottomButtonText}>Back to Website</Text>
+        </Pressable>
+        <Pressable style={styles.bottomButton} onPress={signOut}>
+          <LogOut size={18} color={MUTED_TEXT} />
+          <Text style={styles.bottomButtonText}>Sign Out</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -145,7 +162,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
     paddingTop: 30,
-    paddingBottom: 60,
+    paddingBottom: 40,
   },
   header: {
     marginBottom: 20,
@@ -221,5 +238,24 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontFamily: 'Times New Roman', // Matches the serif look from screenshot
     letterSpacing: -0.5,
+  },
+  bottomContainer: {
+    padding: 24,
+    paddingBottom: 40,
+    borderTopWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: DARK_BG,
+  },
+  bottomButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+  },
+  bottomButtonText: {
+    color: MUTED_TEXT,
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 14,
+    letterSpacing: 0.5,
   },
 });
