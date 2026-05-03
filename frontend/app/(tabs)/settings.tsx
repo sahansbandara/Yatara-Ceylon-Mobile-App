@@ -1,30 +1,45 @@
-import { useFocusEffect, router } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
-import { CalendarCheck, ChevronLeft, LogOut, Compass, Map, User } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { LogOut, Save } from 'lucide-react-native';
 
-import { api } from '@/lib/api';
+import { Button, Card, Field } from '@/components/yatara/ui';
+import { Colors, Shadows, Typography } from '@/constants/theme';
+import { API_URL, api, getApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Booking } from '@/lib/types';
-
-const DARK_BG = '#0B100E';
-const DARK_CARD = '#121715';
-const BORDER = '#1D2522';
-const GOLD = '#D4AF37';
-const MUTED = '#69736F';
-const TEXT = '#F8F4EA';
 
 export default function ProfileScreen() {
-  const { user, logout, isAdmin } = useAuth();
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const { user, logout, updateProfile } = useAuth();
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [apiStatus, setApiStatus] = useState('Checking...');
+  const [saving, setSaving] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      api.get('/bookings/my').then((res) => {
-        setBookings(res.data.data);
-      }).catch(() => {});
-    }, [])
-  );
+  useEffect(() => {
+    api.get('/auth/me')
+      .then(() => setApiStatus('Connected'))
+      .catch(() => setApiStatus('Not reachable'));
+  }, []);
+
+  async function save() {
+    if (name.trim().length < 2) {
+      Alert.alert('Invalid name', 'Name must be at least 2 characters.');
+      return;
+    }
+    if (phone.trim() && phone.trim().length < 7) {
+      Alert.alert('Invalid phone', 'Phone number must be at least 7 characters.');
+      return;
+    }
+    try {
+      setSaving(true);
+      await updateProfile({ name: name.trim(), phone: phone.trim() });
+      Alert.alert('Profile updated', 'Your profile changes were saved.');
+    } catch (error) {
+      Alert.alert('Save failed', getApiError(error));
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function signOut() {
     await logout();
@@ -32,213 +47,102 @@ export default function ProfileScreen() {
   }
 
   const initials = user?.name
-    ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-    : '??';
+    ? user.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+    : 'YC';
 
   return (
     <View style={s.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scroll}>
-        
-        {/* Yatara Logo Header */}
-        <View style={s.logoHeader}>
-          <Compass size={24} color={TEXT} />
-          <View style={{ marginLeft: 10 }}>
-            <Text style={s.logoTitle}>YATARA</Text>
-            <Text style={s.logoSubtitle}>CEYLON</Text>
-          </View>
-        </View>
-
-        {/* Signed In As */}
-        <View style={s.signedInBox}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
+        <View style={s.header}>
           <View style={s.avatar}>
             <Text style={s.avatarText}>{initials}</Text>
           </View>
-          <View>
-            <Text style={s.signedInLabel}>SIGNED IN AS</Text>
-            <Text style={s.signedInName}>{user?.name}</Text>
-            <Text style={s.signedInRole}>({user?.role === 'ADMIN' ? 'Administrator' : 'Customer'})</Text>
+          <Text style={s.title}>{user?.name || 'Traveler'}</Text>
+          <Text style={s.subtitle}>{user?.email}</Text>
+          <View style={s.roleBadge}>
+            <Text style={s.roleText}>Role: USER</Text>
           </View>
         </View>
 
-        {/* MY TRAVEL Section */}
-        <Text style={s.sectionTitle}>MY TRAVEL</Text>
-        
-        <Pressable 
-          style={({ pressed }) => [s.menuItem, s.menuItemActive, pressed && { opacity: 0.8 }]}
-          onPress={() => router.push('/(tabs)/bookings')}
-        >
-          <View style={s.activeIndicator} />
-          <CalendarCheck size={18} color={GOLD} />
-          <Text style={[s.menuText, { color: GOLD }]}>My Bookings</Text>
+        <Card>
+          <Text style={s.sectionLabel}>Profile Details</Text>
+          <Field label="Full Name" value={name} onChangeText={setName} placeholder="Your name" />
+          <Field label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+94 77 123 4567" />
+          <Button title="Save Changes" icon={<Save color={Colors.white} size={18} />} onPress={save} loading={saving} />
+        </Card>
+
+        <Card>
+          <Text style={s.sectionLabel}>App Status</Text>
+          <InfoRow label="App Version" value="1.0.0 Viva Demo" />
+          <InfoRow label="Backend API" value={apiStatus} />
+          <Text style={s.apiUrl} numberOfLines={2}>{API_URL}</Text>
+        </Card>
+
+        <Pressable onPress={signOut} style={({ pressed }) => [s.logoutBtn, pressed && { opacity: 0.82 }]}>
+          <LogOut color={Colors.danger} size={18} />
+          <Text style={s.logoutText}>Logout</Text>
         </Pressable>
-
-        <Pressable 
-          style={({ pressed }) => [s.menuItem, pressed && { opacity: 0.8 }]}
-          onPress={() => router.push('/(tabs)/packages')}
-        >
-          <Map size={18} color={MUTED} />
-          <Text style={s.menuText}>Explore Plans</Text>
-        </Pressable>
-
-        {/* ACCOUNT Section */}
-        <Text style={[s.sectionTitle, { marginTop: 24 }]}>ACCOUNT</Text>
-        
-        <Pressable style={s.menuItem}>
-          <User size={18} color={MUTED} />
-          <Text style={s.menuText}>Profile Settings</Text>
-        </Pressable>
-
-        {isAdmin && (
-          <Pressable 
-            style={({ pressed }) => [s.menuItem, pressed && { opacity: 0.8 }]}
-            onPress={() => router.push('/(admin-tabs)' as any)}
-          >
-            <Compass size={18} color={MUTED} />
-            <Text style={s.menuText}>Admin Command Center</Text>
-          </Pressable>
-        )}
-
       </ScrollView>
+    </View>
+  );
+}
 
-      {/* Bottom Buttons */}
-      <View style={s.bottomContainer}>
-        <Pressable style={s.bottomButton} onPress={() => router.replace('/(tabs)')}>
-          <ChevronLeft size={18} color={MUTED} />
-          <Text style={s.bottomButtonText}>Back to Home</Text>
-        </Pressable>
-        <Pressable style={s.bottomButton} onPress={signOut}>
-          <LogOut size={18} color={MUTED} />
-          <Text style={s.bottomButtonText}>Sign Out</Text>
-        </Pressable>
-      </View>
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={s.infoRow}>
+      <Text style={s.infoLabel}>{label}</Text>
+      <Text style={s.infoValue}>{value}</Text>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: DARK_BG,
-  },
-  scroll: {
-    padding: 24,
-    paddingTop: 40,
-    paddingBottom: 40,
-  },
-  logoHeader: {
-    flexDirection: 'row',
+  screen: { flex: 1, backgroundColor: Colors.offWhite },
+  content: { padding: 20, paddingBottom: 36, gap: 14 },
+  header: {
+    backgroundColor: Colors.deepEmerald,
+    borderRadius: 18,
+    padding: 22,
     alignItems: 'center',
-    marginBottom: 40,
-  },
-  logoTitle: {
-    color: TEXT,
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: 3,
-  },
-  logoSubtitle: {
-    color: MUTED,
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 4,
-    marginTop: -2,
-  },
-  signedInBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: BORDER,
-    marginBottom: 30,
+    ...Shadows.md,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#1A1810',
-    borderWidth: 1,
-    borderColor: '#302A18',
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    backgroundColor: Colors.antiqueGold,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    marginBottom: 12,
   },
-  avatarText: {
-    color: GOLD,
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  signedInLabel: {
-    color: MUTED,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    marginBottom: 2,
-  },
-  signedInName: {
-    color: GOLD,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  signedInRole: {
-    color: MUTED,
-    fontSize: 12,
-  },
-  sectionTitle: {
-    color: '#4A5550',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 2,
-    marginBottom: 16,
-    marginLeft: 16,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 4,
-  },
-  menuItemActive: {
-    backgroundColor: '#161B19',
+  avatarText: { color: Colors.ink, fontSize: 24, fontWeight: '900' },
+  title: { color: Colors.white, ...Typography.h3, textAlign: 'center' },
+  subtitle: { color: 'rgba(255,255,255,0.72)', ...Typography.caption, marginTop: 4 },
+  roleBadge: {
+    backgroundColor: 'rgba(212,175,55,0.18)',
     borderWidth: 1,
-    borderColor: '#222B28',
-    position: 'relative',
-    overflow: 'hidden',
+    borderColor: 'rgba(212,175,55,0.45)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginTop: 12,
   },
-  activeIndicator: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
-    backgroundColor: GOLD,
-  },
-  menuText: {
-    color: MUTED,
-    fontSize: 15,
-    fontWeight: '500',
-    marginLeft: 14,
-    letterSpacing: 0.5,
-  },
-  bottomContainer: {
-    padding: 24,
-    paddingBottom: 40,
-    borderTopWidth: 1,
-    borderColor: BORDER,
-    backgroundColor: DARK_BG,
-  },
-  bottomButton: {
+  roleText: { color: Colors.antiqueGold, ...Typography.captionBold },
+  sectionLabel: { color: Colors.deepEmerald, ...Typography.overline, marginBottom: 10 },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingVertical: 8 },
+  infoLabel: { color: Colors.muted, ...Typography.caption },
+  infoValue: { color: Colors.deepEmerald, ...Typography.captionBold, textAlign: 'right', flex: 1 },
+  apiUrl: { color: Colors.muted, ...Typography.tiny, marginTop: 8 },
+  logoutBtn: {
+    backgroundColor: Colors.dangerLight,
+    borderWidth: 1,
+    borderColor: 'rgba(180,35,24,0.2)',
+    borderRadius: 14,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
+    justifyContent: 'center',
+    gap: 10,
   },
-  bottomButtonText: {
-    color: MUTED,
-    fontSize: 14,
-    fontWeight: '500',
-    marginLeft: 14,
-    letterSpacing: 0.5,
-  },
+  logoutText: { color: Colors.danger, ...Typography.bodyBold },
 });

@@ -1,25 +1,14 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { Link, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Image, ImageSourcePropType, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ArrowLeft, MessageCircle } from 'lucide-react-native';
 
-import { Card, EmptyState, Screen } from '@/components/yatara/ui';
-import { CategoryImages, HeroImages } from '@/constants/images';
+import { Button, Card, EmptyState } from '@/components/yatara/ui';
+import { getPackageImage } from '@/constants/images';
 import { Colors, Shadows, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
 import { PackageItem } from '@/lib/types';
-
-const STYLE_IMAGE: Record<string, ImageSourcePropType> = {
-  heritage: CategoryImages.heritage,
-  cultural: CategoryImages.heritage,
-  wildlife: CategoryImages.wildlife,
-  adventure: CategoryImages.adventure,
-  wellness: CategoryImages.ayurveda,
-  luxury: HeroImages.dusk,
-  beach: CategoryImages.coastal,
-  marine: CategoryImages.coastal,
-  hillcountry: CategoryImages.hillCountry,
-};
 
 export default function PackageDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,111 +23,112 @@ export default function PackageDetailsScreen() {
 
   if (!item) {
     return (
-      <Screen>
-        <EmptyState text="Loading package..." />
-      </Screen>
+      <View style={s.screen}>
+        <EmptyState text="Loading package details..." />
+      </View>
     );
   }
 
-  const heroImage = item.images?.[0]
-    ? { uri: item.images[0] }
-    : (STYLE_IMAGE[item.style?.toLowerCase() ?? ''] ?? HeroImages.dawn);
+  const highlights = item.highlights?.length ? item.highlights : ['Private tour planning', 'Local guide support', 'Comfortable transfers'];
+  const inclusions = item.inclusions?.length ? item.inclusions : ['Accommodation planning', 'Transport coordination', 'Yatara Ceylon support'];
+  const itinerary = item.itinerary?.length ? item.itinerary : [
+    { day: 1, title: 'Arrival and orientation', description: 'Meet the team and begin the curated route.' },
+    { day: 2, title: 'Signature experience', description: item.summary },
+  ];
 
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.offWhite }}>
+    <View style={s.screen}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Hero Image */}
-        <View style={s.heroWrap}>
-          <Image source={heroImage} style={s.heroImage} resizeMode="cover" />
-          <LinearGradient
-            colors={['transparent', 'rgba(6,63,50,0.88)']}
-            style={s.heroGradient}
-          />
+        <View style={s.hero}>
+          <Image source={getPackageImage(item)} style={s.heroImage} resizeMode="cover" />
+          <LinearGradient colors={['rgba(6,63,50,0.05)', 'rgba(6,63,50,0.92)']} style={StyleSheet.absoluteFillObject} />
+          <Pressable onPress={() => router.back()} style={s.backBtn}>
+            <ArrowLeft color={Colors.white} size={20} />
+          </Pressable>
           <View style={s.heroContent}>
-            {item.style ? (
-              <View style={s.badge}>
-                <Text style={s.badgeText}>{item.style}</Text>
-              </View>
-            ) : null}
+            <View style={s.badge}>
+              <Text style={s.badgeText}>{item.style || 'Available'}</Text>
+            </View>
             <Text style={s.heroTitle}>{item.title}</Text>
-            <Text style={s.heroMeta}>
-              {item.duration} · From LKR {item.priceMin?.toLocaleString()}
-            </Text>
+            <Text style={s.heroMeta}>{item.duration} | From LKR {item.priceMin?.toLocaleString()}</Text>
           </View>
         </View>
 
         <View style={s.body}>
-          {/* Summary */}
           <Card>
-            <Text style={s.cardLabel}>Overview</Text>
-            <Text style={s.summaryText}>{item.summary}</Text>
+            <Text style={s.label}>Overview</Text>
+            <Text style={s.bodyText}>{item.fullDescription || item.summary}</Text>
           </Card>
 
-          {/* Price range */}
           <Card>
-            <Text style={s.cardLabel}>Price Range</Text>
-            <View style={s.priceRow}>
-              <View style={s.priceItem}>
-                <Text style={s.priceLabel}>From</Text>
-                <Text style={s.priceValue}>LKR {item.priceMin?.toLocaleString()}</Text>
-              </View>
-              <View style={s.priceDivider} />
-              <View style={s.priceItem}>
-                <Text style={s.priceLabel}>Up to</Text>
-                <Text style={s.priceValue}>LKR {item.priceMax?.toLocaleString()}</Text>
-              </View>
-            </View>
+            <Text style={s.label}>Highlights</Text>
+            {highlights.slice(0, 6).map((highlight) => (
+              <Bullet key={highlight} text={highlight} />
+            ))}
           </Card>
 
-          {/* Highlights */}
           <Card>
-            <Text style={s.cardLabel}>Highlights</Text>
-            {(item.highlights || ['Private tour planning', 'Local operations support']).map(
-              (highlight, idx) => (
-                <View key={highlight} style={s.highlightRow}>
-                  <View style={s.highlightDot} />
-                  <Text style={s.highlightText}>{highlight}</Text>
+            <Text style={s.label}>Short Itinerary</Text>
+            {itinerary.slice(0, 4).map((day) => (
+              <View key={`${day.day}-${day.title}`} style={s.dayRow}>
+                <View style={s.dayBadge}>
+                  <Text style={s.dayBadgeText}>{day.day}</Text>
                 </View>
-              ),
-            )}
+                <View style={{ flex: 1 }}>
+                  <Text style={s.dayTitle}>{day.title}</Text>
+                  {day.description ? <Text style={s.dayText}>{day.description}</Text> : null}
+                </View>
+              </View>
+            ))}
           </Card>
 
-          {/* Gallery */}
-          {item.images && item.images.length > 1 ? (
-            <>
-              <Text style={s.galleryTitle}>Gallery</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {item.images.map((img, idx) => (
-                  <Image
-                    key={idx}
-                    source={{ uri: img }}
-                    style={s.galleryImage}
-                    resizeMode="cover"
-                  />
-                ))}
-              </ScrollView>
-            </>
-          ) : null}
+          <Card>
+            <Text style={s.label}>Included Items</Text>
+            {inclusions.slice(0, 6).map((itemText) => (
+              <Bullet key={itemText} text={itemText} />
+            ))}
+          </Card>
 
-          {/* CTA */}
-          <Link
-            href={`/booking/${item._id}`}
-            style={s.ctaButton}>
-            Request Booking
-          </Link>
-
-          <View style={{ height: 40 }} />
+          <View style={s.ctaRow}>
+            <Button title="Book Now" onPress={() => router.push(`/booking/${item._id}`)} />
+            <Button
+              title="Contact WhatsApp"
+              variant="secondary"
+              icon={<MessageCircle color={Colors.deepEmerald} size={18} />}
+              onPress={() => Linking.openURL(`https://wa.me/94771234567?text=${encodeURIComponent(`Hello Yatara Ceylon, I want details about ${item.title}.`)}`)}
+            />
+          </View>
         </View>
       </ScrollView>
     </View>
   );
 }
 
+function Bullet({ text }: { text: string }) {
+  return (
+    <View style={s.bulletRow}>
+      <View style={s.dot} />
+      <Text style={s.bodyText}>{text}</Text>
+    </View>
+  );
+}
+
 const s = StyleSheet.create({
-  heroWrap: { height: 300, backgroundColor: Colors.emerald },
+  screen: { flex: 1, backgroundColor: Colors.offWhite },
+  hero: { height: 320, backgroundColor: Colors.deepEmerald },
   heroImage: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' },
-  heroGradient: { ...StyleSheet.absoluteFillObject },
-  heroContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 22 },
+  backBtn: {
+    position: 'absolute',
+    top: 18,
+    left: 18,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(6,63,50,0.72)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroContent: { position: 'absolute', left: 20, right: 20, bottom: 22 },
   badge: {
     alignSelf: 'flex-start',
     backgroundColor: Colors.antiqueGold,
@@ -147,53 +137,26 @@ const s = StyleSheet.create({
     paddingVertical: 4,
     marginBottom: 10,
   },
-  badgeText: {
-    color: Colors.ink,
-    ...Typography.tiny,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
+  badgeText: { color: Colors.ink, ...Typography.tiny, fontWeight: '800', textTransform: 'uppercase' },
   heroTitle: { color: Colors.white, ...Typography.h1 },
-  heroMeta: { color: 'rgba(255,255,255,0.8)', ...Typography.body, marginTop: 4 },
-  body: { padding: 20 },
-  cardLabel: {
-    color: Colors.deepEmerald,
-    ...Typography.overline,
-    marginBottom: 10,
-  },
-  summaryText: { color: Colors.ink, ...Typography.body, lineHeight: 24 },
-  priceRow: { flexDirection: 'row', alignItems: 'center' },
-  priceItem: { flex: 1, alignItems: 'center' },
-  priceLabel: { color: Colors.muted, ...Typography.tiny, marginBottom: 4 },
-  priceValue: { color: Colors.antiqueGold, ...Typography.h3 },
-  priceDivider: { width: 1, height: 40, backgroundColor: Colors.borderLight },
-  highlightRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 10 },
-  highlightDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.antiqueGold,
-  },
-  highlightText: { color: Colors.ink, ...Typography.body, flex: 1 },
-  galleryTitle: { color: Colors.deepEmerald, ...Typography.h4, marginTop: 20, marginBottom: 12 },
-  galleryImage: {
-    width: 200,
-    height: 130,
-    borderRadius: 14,
-    marginRight: 12,
-    backgroundColor: Colors.emerald,
-  },
-  ctaButton: {
+  heroMeta: { color: 'rgba(255,255,255,0.82)', ...Typography.body, marginTop: 6 },
+  body: { padding: 20, gap: 14 },
+  label: { color: Colors.deepEmerald, ...Typography.overline, marginBottom: 10 },
+  bodyText: { color: Colors.ink, ...Typography.body, flex: 1 },
+  bulletRow: { flexDirection: 'row', gap: 10, marginBottom: 8, alignItems: 'flex-start' },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.antiqueGold, marginTop: 7 },
+  dayRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+  dayBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: Colors.deepEmerald,
-    color: Colors.white,
-    textAlign: 'center',
-    padding: 16,
-    borderRadius: 14,
-    fontWeight: '800',
-    fontSize: 16,
-    overflow: 'hidden',
-    marginTop: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
     ...Shadows.sm,
   },
+  dayBadgeText: { color: Colors.antiqueGold, ...Typography.captionBold },
+  dayTitle: { color: Colors.deepEmerald, ...Typography.captionBold },
+  dayText: { color: Colors.muted, ...Typography.caption, marginTop: 2 },
+  ctaRow: { gap: 10, marginTop: 2, marginBottom: 28 },
 });

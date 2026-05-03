@@ -1,7 +1,7 @@
-import * as SecureStore from 'expo-secure-store';
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 
-import { api, TOKEN_KEY } from './api';
+import { api } from './api';
+import { deleteStoredToken, getStoredToken, setStoredToken } from './tokenStorage';
 
 export type User = {
   id: string;
@@ -19,6 +19,7 @@ type AuthContextValue = {
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<User>;
   register: (payload: { name: string; email: string; phone: string; password: string }) => Promise<void>;
+  updateProfile: (payload: { name: string; phone?: string }) => Promise<User>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 };
@@ -38,14 +39,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     async function bootstrap() {
       try {
-        const storedToken = await SecureStore.getItemAsync(TOKEN_KEY);
+        const storedToken = await getStoredToken();
         if (storedToken) {
           setToken(storedToken);
           const response = await api.get('/auth/me');
           setUser(response.data.user);
         }
       } catch {
-        await SecureStore.deleteItemAsync(TOKEN_KEY);
+        await deleteStoredToken();
         setToken(null);
         setUser(null);
       } finally {
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   async function login(email: string, password: string) {
     const response = await api.post('/auth/login', { email, password });
-    await SecureStore.setItemAsync(TOKEN_KEY, response.data.token);
+    await setStoredToken(response.data.token);
     setToken(response.data.token);
     setUser(response.data.user);
     return response.data.user;
@@ -65,9 +66,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   async function register(payload: { name: string; email: string; phone: string; password: string }) {
     const response = await api.post('/auth/register', payload);
-    await SecureStore.setItemAsync(TOKEN_KEY, response.data.token);
+    await setStoredToken(response.data.token);
     setToken(response.data.token);
     setUser(response.data.user);
+  }
+
+  async function updateProfile(payload: { name: string; phone?: string }) {
+    const response = await api.put('/auth/profile', payload);
+    setUser(response.data.user);
+    return response.data.user;
   }
 
   async function logout() {
@@ -76,7 +83,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     } catch {
       // Logout is client-owned for bearer tokens.
     }
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    await deleteStoredToken();
     setToken(null);
     setUser(null);
   }
@@ -89,6 +96,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       isAdmin: user?.role === 'ADMIN' || user?.role === 'STAFF',
       login,
       register,
+      updateProfile,
       logout,
       refreshUser,
     }),

@@ -20,6 +20,10 @@ const bookingSchema = z.object({
 
 const statusSchema = z.object({
   status: z.enum(['NEW', 'PAYMENT_PENDING', 'ADVANCE_PAID', 'CONFIRMED', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']),
+  vehicleId: z.string().optional().or(z.literal('')),
+  hotelPartnerId: z.string().optional().or(z.literal('')),
+  supplierPartnerId: z.string().optional().or(z.literal('')),
+  adminNote: z.string().optional(),
 });
 
 async function createBooking(req, res, next) {
@@ -71,6 +75,9 @@ async function myBookings(req, res, next) {
       $or: [{ customerId: req.user._id }, { email: req.user.email }],
     })
       .populate('packageId', 'title duration images priceMin')
+      .populate('vehicleId', 'model type plateNumber seats')
+      .populate('hotelPartnerId', 'name type phone')
+      .populate('supplierPartnerId', 'name type phone')
       .sort({ createdAt: -1 });
     res.json({ data: bookings });
   } catch (error) {
@@ -83,6 +90,9 @@ async function listBookings(_req, res, next) {
     const bookings = await Booking.find({ isDeleted: { $ne: true } })
       .populate('packageId', 'title duration images priceMin')
       .populate('customerId', 'name email')
+      .populate('vehicleId', 'model type plateNumber seats')
+      .populate('hotelPartnerId', 'name type phone')
+      .populate('supplierPartnerId', 'name type phone')
       .sort({ createdAt: -1 });
     res.json({ data: bookings });
   } catch (error) {
@@ -92,10 +102,15 @@ async function listBookings(_req, res, next) {
 
 async function updateBookingStatus(req, res, next) {
   try {
-    const { status } = statusSchema.parse(req.body);
+    const { status, vehicleId, hotelPartnerId, supplierPartnerId, adminNote } = statusSchema.parse(req.body);
+    const update = { status };
+    if (vehicleId !== undefined) update.vehicleId = vehicleId || null;
+    if (hotelPartnerId !== undefined) update.hotelPartnerId = hotelPartnerId || null;
+    if (supplierPartnerId !== undefined) update.supplierPartnerId = supplierPartnerId || null;
+    if (adminNote !== undefined) update.adminNote = adminNote;
     const item = await Booking.findOneAndUpdate(
       { _id: req.params.id, isDeleted: { $ne: true } },
-      { status },
+      update,
       { new: true }
     );
     if (!item) return res.status(404).json({ error: 'Booking not found' });

@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { Alert, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Search, Plus, X } from 'lucide-react-native';
 
-import { HeroImages } from '@/constants/images';
+import { getPackageImage } from '@/constants/images';
 import { api, getApiError } from '@/lib/api';
 import { PackageItem } from '@/lib/types';
 import { appendImage, pickImage } from '@/lib/upload';
@@ -71,6 +71,7 @@ export default function AdminPackagesScreen() {
     form.append('durationDays', '3');
     form.append('priceMin', priceMin);
     form.append('priceMax', priceMin);
+    form.append('isPublished', 'true');
     appendImage(form, image);
     try {
       await api.post('/packages', form, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -114,6 +115,17 @@ export default function AdminPackagesScreen() {
         catch (e) { Alert.alert('Delete failed', getApiError(e)); }
       }},
     ]);
+  }
+
+  async function togglePublished(item: PackageItem) {
+    const form = new FormData();
+    form.append('isPublished', String(!item.isPublished));
+    try {
+      await api.put(`/packages/${item._id}`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      load();
+    } catch (error) {
+      Alert.alert('Publish update failed', getApiError(error));
+    }
   }
 
   const filtered = items.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -221,17 +233,27 @@ export default function AdminPackagesScreen() {
             ) : (
               <View>
                 <Image
-                  source={item.images?.[0] ? { uri: item.images[0] } : HeroImages.dawn}
+                  source={getPackageImage(item)}
                   style={s.thumb}
                   resizeMode="cover"
                 />
                 <View style={s.cardInner}>
                   <Text style={s.cardTitle}>{item.title}</Text>
-                  <Text style={s.cardSub}>{item.duration} · LKR {item.priceMin?.toLocaleString()}</Text>
+                  <View style={s.metaRow}>
+                    <Text style={s.cardSub}>{item.duration} · LKR {item.priceMin?.toLocaleString()}</Text>
+                    <View style={[s.publishBadge, item.isPublished === false && s.draftBadge]}>
+                      <Text style={[s.publishText, item.isPublished === false && s.draftText]}>
+                        {item.isPublished === false ? 'Draft' : 'Published'}
+                      </Text>
+                    </View>
+                  </View>
                   {item.summary ? <Text style={s.cardDesc} numberOfLines={2}>{item.summary}</Text> : null}
                   <View style={s.cardActions}>
                     <Pressable style={s.secondaryBtn} onPress={() => startEdit(item)}>
                       <Text style={s.secondaryBtnText}>Edit</Text>
+                    </Pressable>
+                    <Pressable style={s.secondaryBtn} onPress={() => togglePublished(item)}>
+                      <Text style={s.secondaryBtnText}>{item.isPublished === false ? 'Publish' : 'Unpublish'}</Text>
                     </Pressable>
                     <Pressable style={s.dangerBtn} onPress={() => remove(item._id)}>
                       <Text style={s.dangerBtnText}>Delete</Text>
@@ -289,6 +311,11 @@ const s = StyleSheet.create({
   thumb: { width: '100%', height: 160, backgroundColor: '#1A241F' },
   cardTitle: { color: DARK_TEXT, fontSize: 17, fontWeight: '700', marginBottom: 4 },
   cardSub: { color: GOLD, fontSize: 13, fontWeight: '600', marginBottom: 6 },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 4 },
+  publishBadge: { backgroundColor: '#10b98120', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  publishText: { color: '#10b981', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  draftBadge: { backgroundColor: '#f59e0b20' },
+  draftText: { color: '#f59e0b' },
   cardDesc: { color: MUTED, fontSize: 13, lineHeight: 18, marginBottom: 4 },
   cardActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
 

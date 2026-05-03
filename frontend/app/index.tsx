@@ -38,7 +38,11 @@ export default function SplashScreen() {
   useEffect(() => {
     if (loading) return;
     const timer = setTimeout(() => {
-      router.replace(user ? '/(tabs)' : '/auth/login');
+      if (!user) {
+        router.replace('/auth/login');
+        return;
+      }
+      router.replace(user.role === 'ADMIN' || user.role === 'STAFF' ? '/(admin-tabs)' : '/(tabs)');
     }, 1200);
     return () => clearTimeout(timer);
   }, [loading, user]);

@@ -1,116 +1,115 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, View, Image, Pressable } from 'react-native';
-import { CheckCircle2 } from 'lucide-react-native';
+import { Alert, FlatList, Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { MessageCircle } from 'lucide-react-native';
 
-import { EmptyState, Screen } from '@/components/yatara/ui';
+import { Button, EmptyState } from '@/components/yatara/ui';
+import { HeroImages, getPackageImage } from '@/constants/images';
+import { Colors, Shadows, Typography } from '@/constants/theme';
 import { api, getApiError } from '@/lib/api';
+import { toVivaStatus } from '@/lib/bookingStatus';
 import { Booking } from '@/lib/types';
 
-// Elite Dark Theme Constants
-const DARK_BG = '#0B100E';
-const CARD_BG = '#0C1310';
-const INNER_CARD = '#0F1A15';
-const BORDER = '#1A241F';
-const GOLD = '#D4AF37';
-const GREEN = '#10B981';
-const MUTED = '#69736F';
-const TEXT = '#F8F4EA';
+const STATUS_COLORS = {
+  PENDING: { bg: Colors.warningLight, fg: Colors.warning },
+  CONFIRMED: { bg: Colors.successLight, fg: Colors.success },
+  COMPLETED: { bg: Colors.infoLight, fg: Colors.info },
+  CANCELLED: { bg: Colors.dangerLight, fg: Colors.danger },
+};
 
 export default function BookingsScreen() {
   const [items, setItems] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useFocusEffect(
-    useCallback(() => {
-      api.get('/bookings/my')
-        .then((response) => setItems(response.data.data))
-        .catch((error) => Alert.alert('Could not load bookings', getApiError(error)))
-        .finally(() => setLoading(false));
-    }, []),
-  );
+  const load = useCallback(() => {
+    setLoading(true);
+    api.get('/bookings/my')
+      .then((response) => setItems(response.data.data))
+      .catch((error) => Alert.alert('Could not load bookings', getApiError(error)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useFocusEffect(load);
+
+  async function cancelBooking(id: string) {
+    try {
+      await api.delete(`/bookings/${id}`);
+      load();
+    } catch (error) {
+      Alert.alert('Cancel failed', getApiError(error));
+    }
+  }
 
   return (
     <View style={s.screen}>
-      <View style={s.header}>
-        <Text style={s.headerTitle}>My Bookings</Text>
-        <Text style={s.headerSubtitle}>Track your travel inquiries and reservations</Text>
-      </View>
-
       <FlatList
         data={items}
         keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={s.listContent}
+        ListHeaderComponent={
+          <View style={s.header}>
+            <Text style={s.kicker}>CUSTOMER DASHBOARD</Text>
+            <Text style={s.title}>My Bookings</Text>
+            <Text style={s.subtitle}>Track requests, admin confirmations, and completed journeys.</Text>
+          </View>
+        }
         ListEmptyComponent={
           loading ? null : (
-            <EmptyState text="No bookings yet. Create one from a package details screen." />
+            <EmptyState text="No bookings yet. Create one from a package detail screen." />
           )
         }
         renderItem={({ item }) => {
-          const isPackage = !!item.packageId;
-          const title = item.packageId?.title || 'Custom Tour Request';
-          // Use first image of the package, or a default fallback if none
-          const imageUrl = item.packageId?.images?.[0] || 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?w=800&q=80';
-          
+          const status = toVivaStatus(item.status);
+          const statusColor = STATUS_COLORS[status];
+          const title = item.packageId?.title || (item.type === 'TRANSFER' ? 'Transfer Request' : 'Custom Tour Request');
+          const imageSource = item.packageId ? getPackageImage(item.packageId) : HeroImages.dusk;
+          const date = item.dates?.from ? new Date(item.dates.from).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date pending';
+          const vehicle = typeof item.vehicleId === 'object' ? item.vehicleId : undefined;
+          const hotel = typeof item.hotelPartnerId === 'object' ? item.hotelPartnerId : undefined;
+          const supplier = typeof item.supplierPartnerId === 'object' ? item.supplierPartnerId : undefined;
+
           return (
-            <View style={s.card}>
-              {/* Image Section */}
-              <View style={s.imageContainer}>
-                <Image source={{ uri: imageUrl }} style={s.image} />
-                <View style={s.imageOverlay} />
-                
-                {/* Top Badges over image */}
-                <View style={s.badgeRow}>
-                  <View style={s.typeBadge}>
-                    <Text style={s.typeBadgeText}>{isPackage ? 'PACKAGE' : 'CUSTOM'}</Text>
-                  </View>
-                  <View style={s.statusBadge}>
-                    <CheckCircle2 size={12} color={TEXT} />
-                    <Text style={s.statusBadgeText}>{item.status.replace('_', ' ')}</Text>
+            <View style={[s.card, Shadows.sm]}>
+              <Image source={imageSource} style={s.image} resizeMode="cover" />
+              <View style={s.body}>
+                <View style={s.topRow}>
+                  <Text style={s.bookingNo}>{item.bookingNo}</Text>
+                  <View style={[s.statusBadge, { backgroundColor: statusColor.bg }]}>
+                    <Text style={[s.statusText, { color: statusColor.fg }]}>{status}</Text>
                   </View>
                 </View>
-              </View>
-
-              {/* Content Section */}
-              <View style={s.content}>
-                <Text style={s.refText}>REF: {item.bookingNo}</Text>
-                <Text style={s.titleText}>{title}</Text>
-
-                {/* Inner Cards Grid */}
-                <View style={s.innerGrid}>
-                  <View style={s.innerCard}>
-                    <Text style={s.innerLabel}>TRAVEL DATES</Text>
-                    <Text style={s.innerValue}>
-                      {new Date(item.dates.from).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} {'\u2192'} {new Date(item.dates.to || item.dates.from).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                    </Text>
-                  </View>
-                  <View style={s.innerCard}>
-                    <Text style={s.innerLabel}>GUESTS</Text>
-                    <Text style={s.innerValue}>{item.pax} Passenger{item.pax > 1 ? 's' : ''}</Text>
-                  </View>
-                </View>
-
-                {/* Pricing Section */}
-                {item.totalCost ? (
-                  <View style={s.priceSection}>
-                    <View>
-                      <Text style={s.innerLabel}>TOTAL VALUE</Text>
-                      <Text style={s.totalValue}>LKR {item.totalCost.toLocaleString()}</Text>
-                    </View>
-                    <View style={s.paidDueBox}>
-                      <View style={s.paidBadge}>
-                        <Text style={s.paidText}>PAID: LKR 0</Text>
-                      </View>
-                      <Text style={s.dueText}>DUE: LKR {item.totalCost.toLocaleString()}</Text>
-                    </View>
+                <Text style={s.packageTitle}>{title}</Text>
+                <Text style={s.meta}>{date} | {item.pax} Traveler{item.pax > 1 ? 's' : ''}</Text>
+                <Text style={s.cost}>Total Cost: {item.totalCost ? `LKR ${item.totalCost.toLocaleString()}` : 'TBD'}</Text>
+                {item.pickupLocation ? <Text style={s.note}>Pickup: {item.pickupLocation}</Text> : null}
+                {vehicle || hotel || supplier ? (
+                  <View style={s.assignmentBox}>
+                    <Text style={s.assignmentTitle}>Admin Assignments</Text>
+                    {vehicle ? <Text style={s.assignmentText}>Vehicle: {vehicle.model}{vehicle.plateNumber ? ` (${vehicle.plateNumber})` : ''}</Text> : null}
+                    {hotel ? <Text style={s.assignmentText}>Hotel: {hotel.name}</Text> : null}
+                    {supplier ? <Text style={s.assignmentText}>Supplier: {supplier.name}</Text> : null}
+                    {item.adminNote ? <Text style={s.assignmentText}>Note: {item.adminNote}</Text> : null}
                   </View>
                 ) : null}
-
-                {/* Action Button */}
-                <Pressable style={s.actionButton}>
-                  <Text style={s.actionText}>Request Refund</Text>
-                </Pressable>
+                <View style={s.actionRow}>
+                  <Button title="View Details" variant="secondary" fullWidth={false} onPress={() => Alert.alert(item.bookingNo, `${title}\nStatus: ${status}\nTravelers: ${item.pax}\nAdmin note: ${item.notes || item.specialRequests || 'No note yet.'}`)} />
+                  {status !== 'CANCELLED' && status !== 'COMPLETED' ? (
+                    <Pressable
+                      style={s.cancelBtn}
+                      onPress={() => Alert.alert('Cancel Booking', 'Set this booking to CANCELLED?', [
+                        { text: 'No' },
+                        { text: 'Yes', style: 'destructive', onPress: () => cancelBooking(item._id) },
+                      ])}>
+                      <Text style={s.cancelText}>Cancel Booking</Text>
+                    </Pressable>
+                  ) : null}
+                  <Pressable
+                    style={s.whatsappBtn}
+                    onPress={() => Linking.openURL(`https://wa.me/94771234567?text=${encodeURIComponent(`Hello Yatara Ceylon, I need help with booking ${item.bookingNo}.`)}`)}>
+                    <MessageCircle color={Colors.deepEmerald} size={16} />
+                  </Pressable>
+                </View>
               </View>
             </View>
           );
@@ -121,183 +120,61 @@ export default function BookingsScreen() {
 }
 
 const s = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: DARK_BG,
-  },
+  screen: { flex: 1, backgroundColor: Colors.offWhite },
+  listContent: { padding: 20, paddingBottom: 36 },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 20,
+    backgroundColor: Colors.deepEmerald,
+    borderRadius: 18,
+    padding: 22,
+    marginBottom: 18,
   },
-  headerTitle: {
-    color: TEXT,
-    fontSize: 32,
-    fontWeight: '800',
-    fontFamily: 'Times New Roman',
-    letterSpacing: -1,
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    color: MUTED,
-    fontSize: 13,
-    letterSpacing: 0.5,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-    gap: 24,
-  },
+  kicker: { color: Colors.antiqueGold, ...Typography.overline, marginBottom: 8 },
+  title: { color: Colors.white, ...Typography.h1 },
+  subtitle: { color: 'rgba(255,255,255,0.74)', ...Typography.body, marginTop: 4 },
   card: {
-    backgroundColor: CARD_BG,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: BORDER,
+    backgroundColor: Colors.white,
+    borderRadius: 14,
     overflow: 'hidden',
-  },
-  imageContainer: {
-    height: 180,
-    position: 'relative',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-  },
-  badgeRow: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    right: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  typeBadge: {
-    backgroundColor: 'rgba(11, 16, 14, 0.8)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: Colors.borderLight,
+    marginBottom: 14,
   },
-  typeBadgeText: {
-    color: TEXT,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
+  image: { width: '100%', height: 145, backgroundColor: Colors.emerald },
+  body: { padding: 14 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
+  bookingNo: { color: Colors.antiqueGold, ...Typography.captionBold },
+  statusBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
+  statusText: { ...Typography.tiny, fontWeight: '900' },
+  packageTitle: { color: Colors.deepEmerald, ...Typography.h4, marginTop: 8 },
+  meta: { color: Colors.muted, ...Typography.caption, marginTop: 4 },
+  cost: { color: Colors.ink, ...Typography.captionBold, marginTop: 6 },
+  note: { color: Colors.muted, ...Typography.caption, marginTop: 4 },
+  assignmentBox: {
+    backgroundColor: Colors.offWhite,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    padding: 10,
+    marginTop: 10,
   },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(16, 185, 129, 0.2)', // translucent green
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+  assignmentTitle: { color: Colors.deepEmerald, ...Typography.captionBold, marginBottom: 4 },
+  assignmentText: { color: Colors.muted, ...Typography.caption, marginTop: 2 },
+  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 14, alignItems: 'center' },
+  cancelBtn: {
+    borderWidth: 1,
+    borderColor: Colors.danger,
     borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+  },
+  cancelText: { color: Colors.danger, ...Typography.captionBold },
+  whatsappBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.5)',
-  },
-  statusBadgeText: {
-    color: TEXT,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  content: {
-    padding: 20,
-  },
-  refText: {
-    color: GOLD,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-    marginBottom: 6,
-  },
-  titleText: {
-    color: GOLD,
-    fontSize: 22,
-    fontWeight: '700',
-    fontFamily: 'Times New Roman',
-    marginBottom: 20,
-  },
-  innerGrid: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-  },
-  innerCard: {
-    flex: 1,
-    backgroundColor: INNER_CARD,
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: BORDER,
-  },
-  innerLabel: {
-    color: MUTED,
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  innerValue: {
-    color: TEXT,
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  priceSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    borderColor: Colors.border,
     alignItems: 'center',
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: BORDER,
-    marginBottom: 16,
-  },
-  totalValue: {
-    color: TEXT,
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  paidDueBox: {
-    alignItems: 'flex-end',
-  },
-  paidBadge: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
-    marginBottom: 4,
-  },
-  paidText: {
-    color: GREEN,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  dueText: {
-    color: GOLD,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  actionButton: {
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#2A3530',
-    alignItems: 'center',
-  },
-  actionText: {
-    color: MUTED,
-    fontSize: 12,
-    fontWeight: '600',
+    justifyContent: 'center',
   },
 });

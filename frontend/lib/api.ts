@@ -1,8 +1,9 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+
+import { getStoredToken, TOKEN_KEY } from './tokenStorage';
 
 export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api';
-export const TOKEN_KEY = 'yatara_mobile_token';
+export { TOKEN_KEY };
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -10,7 +11,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(async (config) => {
-  const token = await SecureStore.getItemAsync(TOKEN_KEY);
+  const token = await getStoredToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

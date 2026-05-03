@@ -1,18 +1,41 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Car, ChevronLeft, ChevronRight, Compass, Handshake, LayoutDashboard, LogOut, MapPin, Settings, User } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { LogOut, Save, ShieldCheck } from 'lucide-react-native';
 
+import { Button, Card, Field } from '@/components/yatara/ui';
+import { Colors, Typography } from '@/constants/theme';
+import { API_URL, api, getApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 
-const DARK_BG = '#0B100E';
-const DARK_CARD = '#161B19';
-const DARK_TEXT = '#F8F4EA';
-const MUTED = '#69736F';
-const BORDER = '#1D2522';
-const GOLD = '#D4AF37';
-
 export default function AdminProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateProfile } = useAuth();
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [apiStatus, setApiStatus] = useState('Checking...');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    api.get('/auth/me')
+      .then(() => setApiStatus('Connected'))
+      .catch(() => setApiStatus('Not reachable'));
+  }, []);
+
+  async function save() {
+    if (name.trim().length < 2) {
+      Alert.alert('Invalid name', 'Name must be at least 2 characters.');
+      return;
+    }
+    try {
+      setSaving(true);
+      await updateProfile({ name: name.trim(), phone: phone.trim() });
+      Alert.alert('Profile updated', 'Admin profile changes were saved.');
+    } catch (error) {
+      Alert.alert('Save failed', getApiError(error));
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function signOut() {
     await logout();
@@ -20,99 +43,107 @@ export default function AdminProfileScreen() {
   }
 
   const initials = user?.name
-    ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-    : '??';
+    ? user.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+    : 'AD';
 
   return (
     <View style={s.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scroll}>
-
-        {/* Logo */}
-        <View style={s.logoHeader}>
-          <Compass size={24} color={DARK_TEXT} />
-          <View style={{ marginLeft: 10 }}>
-            <Text style={s.logoTitle}>YATARA</Text>
-            <Text style={s.logoSub}>CEYLON</Text>
-          </View>
-        </View>
-
-        {/* Admin Info */}
-        <View style={s.userBox}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
+        <View style={s.header}>
           <View style={s.avatar}>
             <Text style={s.avatarText}>{initials}</Text>
           </View>
-          <View>
-            <Text style={s.signedLabel}>SIGNED IN AS</Text>
-            <Text style={s.userName}>{user?.name || 'Admin'}</Text>
-            <Text style={s.userRole}>({user?.role === 'ADMIN' ? 'Administrator' : 'Staff'})</Text>
+          <Text style={s.title}>{user?.name || 'Admin'}</Text>
+          <Text style={s.subtitle}>{user?.email}</Text>
+          <View style={s.roleRow}>
+            <ShieldCheck color={Colors.antiqueGold} size={16} />
+            <Text style={s.roleText}>Role: {user?.role || 'ADMIN'}</Text>
           </View>
         </View>
 
-        {/* Overview */}
-        <Text style={s.sectionTitle}>OVERVIEW</Text>
-        <MenuItem icon={LayoutDashboard} label="Dashboard" onPress={() => router.push('/(admin-tabs)' as any)} />
+        <Card style={s.darkCard}>
+          <Text style={s.sectionLabel}>Profile Details</Text>
+          <Field label="Admin Name" value={name} onChangeText={setName} placeholder="Admin name" />
+          <Field label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+94 77 123 4567" />
+          <Button title="Save Changes" icon={<Save color={Colors.white} size={18} />} onPress={save} loading={saving} />
+        </Card>
 
-        {/* Operations */}
-        <Text style={[s.sectionTitle, { marginTop: 24 }]}>OPERATIONS</Text>
-        <MenuItem icon={Car} label="Manage Vehicles" onPress={() => router.push('/admin/vehicles' as any)} />
-        <MenuItem icon={MapPin} label="Manage Destinations" onPress={() => router.push('/admin/destinations' as any)} />
-        <MenuItem icon={Handshake} label="Manage Partners" onPress={() => router.push('/admin/partners' as any)} />
+        <Card style={s.darkCard}>
+          <Text style={s.sectionLabel}>Backend Status</Text>
+          <InfoRow label="API Status" value={apiStatus} />
+          <InfoRow label="API URL" value={API_URL} />
+          <InfoRow label="App Version" value="1.0.0 Viva Demo" />
+        </Card>
 
-        {/* Account */}
-        <Text style={[s.sectionTitle, { marginTop: 24 }]}>ACCOUNT</Text>
-        <MenuItem icon={User} label="Profile Settings" />
-        <MenuItem icon={Settings} label="App Settings" />
-
+        <Pressable onPress={signOut} style={({ pressed }) => [s.logoutBtn, pressed && { opacity: 0.82 }]}>
+          <LogOut color="#ffb4ab" size={18} />
+          <Text style={s.logoutText}>Logout</Text>
+        </Pressable>
       </ScrollView>
-
-      {/* Bottom */}
-      <View style={s.bottomContainer}>
-        <Pressable style={s.bottomBtn} onPress={() => router.replace('/(tabs)')}>
-          <ChevronLeft size={18} color={MUTED} />
-          <Text style={s.bottomBtnText}>Back to Website</Text>
-        </Pressable>
-        <Pressable style={s.bottomBtn} onPress={signOut}>
-          <LogOut size={18} color={MUTED} />
-          <Text style={s.bottomBtnText}>Sign Out</Text>
-        </Pressable>
-      </View>
     </View>
   );
 }
 
-function MenuItem({ icon: Icon, label, onPress }: { icon: any; label: string; onPress?: () => void }) {
+function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <Pressable
-      style={({ pressed }) => [s.menuItem, pressed && { opacity: 0.7 }]}
-      onPress={onPress}>
-      <Icon size={18} color={MUTED} />
-      <Text style={s.menuText}>{label}</Text>
-      <ChevronRight size={16} color={MUTED} style={{ marginLeft: 'auto' }} />
-    </Pressable>
+    <View style={s.infoRow}>
+      <Text style={s.infoLabel}>{label}</Text>
+      <Text style={s.infoValue} numberOfLines={2}>{value}</Text>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: DARK_BG },
-  scroll: { padding: 24, paddingTop: 40, paddingBottom: 40 },
-
-  logoHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 40 },
-  logoTitle: { color: DARK_TEXT, fontSize: 20, fontWeight: '800', letterSpacing: 3 },
-  logoSub: { color: MUTED, fontSize: 9, fontWeight: '700', letterSpacing: 4, marginTop: -2 },
-
-  userBox: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderTopWidth: 1, borderBottomWidth: 1, borderColor: BORDER, marginBottom: 30 },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#1A1810', borderWidth: 1, borderColor: '#302A18', alignItems: 'center', justifyContent: 'center', marginRight: 16 },
-  avatarText: { color: GOLD, fontSize: 16, fontWeight: '800' },
-  signedLabel: { color: MUTED, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 2 },
-  userName: { color: GOLD, fontSize: 15, fontWeight: '700' },
-  userRole: { color: MUTED, fontSize: 12 },
-
-  sectionTitle: { color: '#4A5550', fontSize: 11, fontWeight: '800', letterSpacing: 2, marginBottom: 12, marginLeft: 16 },
-
-  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, marginBottom: 4, backgroundColor: DARK_CARD, borderWidth: 1, borderColor: BORDER },
-  menuText: { color: DARK_TEXT, fontSize: 15, fontWeight: '500', marginLeft: 14, letterSpacing: 0.3 },
-
-  bottomContainer: { padding: 24, paddingBottom: 40, borderTopWidth: 1, borderColor: BORDER, backgroundColor: DARK_BG },
-  bottomBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
-  bottomBtnText: { color: MUTED, fontSize: 14, fontWeight: '500', marginLeft: 14, letterSpacing: 0.5 },
+  screen: { flex: 1, backgroundColor: '#0B100E' },
+  content: { padding: 20, paddingBottom: 36, gap: 14 },
+  header: {
+    backgroundColor: Colors.deepEmerald,
+    borderRadius: 18,
+    padding: 22,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#0d5a47',
+  },
+  avatar: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    backgroundColor: Colors.antiqueGold,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  avatarText: { color: Colors.ink, fontSize: 24, fontWeight: '900' },
+  title: { color: Colors.white, ...Typography.h3, textAlign: 'center' },
+  subtitle: { color: 'rgba(255,255,255,0.72)', ...Typography.caption, marginTop: 4 },
+  roleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(212,175,55,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.42)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginTop: 12,
+  },
+  roleText: { color: Colors.antiqueGold, ...Typography.captionBold },
+  darkCard: { backgroundColor: '#161B19', borderColor: '#222B28' },
+  sectionLabel: { color: Colors.antiqueGold, ...Typography.overline, marginBottom: 10 },
+  infoRow: { gap: 6, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: '#222B28' },
+  infoLabel: { color: '#8B9A96', ...Typography.caption },
+  infoValue: { color: Colors.white, ...Typography.captionBold },
+  logoutBtn: {
+    backgroundColor: '#3D1C1C',
+    borderWidth: 1,
+    borderColor: '#5f2525',
+    borderRadius: 14,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  logoutText: { color: '#ffb4ab', ...Typography.bodyBold },
 });

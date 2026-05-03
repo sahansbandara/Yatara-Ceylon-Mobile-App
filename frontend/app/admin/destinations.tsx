@@ -1,7 +1,8 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { getDestinationImage } from '@/constants/images';
 import { api, getApiError } from '@/lib/api';
 import { Destination } from '@/lib/types';
 import { appendImage, pickImage } from '@/lib/upload';
@@ -152,8 +153,10 @@ export default function ManageDestinationsScreen() {
               </View>
             ) : (
               <View>
+                <Image source={getDestinationImage(item)} style={s.cardImage} resizeMode="cover" />
                 <Text style={s.cardTitle}>{item.title}</Text>
                 <Text style={s.cardSub}>{item.region || 'No region'}</Text>
+                <Text style={s.cardDesc} numberOfLines={2}>{item.description}</Text>
                 {item.bestSeason ? <Text style={s.cardMeta}>Best season: {item.bestSeason}</Text> : null}
                 <View style={s.divider} />
                 <View style={s.cardActions}>
@@ -200,8 +203,10 @@ const s = StyleSheet.create({
   formActions: { flexDirection: 'row', gap: 10 },
 
   card: { backgroundColor: DARK_CARD, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: '#1D2522', marginBottom: 14 },
+  cardImage: { width: '100%', height: 150, borderRadius: 12, backgroundColor: INPUT_BG, marginBottom: 14 },
   cardTitle: { color: DARK_TEXT, fontSize: 17, fontWeight: '700', marginBottom: 4 },
   cardSub: { color: GOLD, fontSize: 13, fontWeight: '600' },
+  cardDesc: { color: MUTED, fontSize: 13, lineHeight: 18, marginTop: 6 },
   cardMeta: { color: MUTED, fontSize: 11, fontWeight: '500', marginTop: 2 },
   divider: { height: 1, backgroundColor: '#1D2522', marginVertical: 14 },
   cardActions: { flexDirection: 'row', gap: 10 },

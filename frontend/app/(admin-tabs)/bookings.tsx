@@ -4,7 +4,8 @@ import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, Vi
 import { Search, X } from 'lucide-react-native';
 
 import { api, getApiError } from '@/lib/api';
-import { Booking } from '@/lib/types';
+import { toVivaStatus } from '@/lib/bookingStatus';
+import { Booking, Partner, Vehicle } from '@/lib/types';
 
 const DARK_BG = '#0B100E';
 const DARK_CARD = '#161B19';
@@ -31,34 +32,118 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 
 function matchesFilter(status: string, filter: FilterType): boolean {
   if (filter === 'All') return true;
-  if (filter === 'Pending') return status === 'NEW' || status === 'PAYMENT_PENDING';
-  if (filter === 'Confirmed') return status === 'CONFIRMED' || status === 'ADVANCE_PAID' || status === 'ASSIGNED' || status === 'IN_PROGRESS';
-  if (filter === 'Completed') return status === 'COMPLETED';
-  if (filter === 'Cancelled') return status === 'CANCELLED';
-  return true;
+  return toVivaStatus(status) === filter.toUpperCase();
+}
+
+function getRelationId(value?: Vehicle | Partner | string) {
+  if (!value) return undefined;
+  return typeof value === 'string' ? value : value._id;
+}
+
+function AssignmentSelector({
+  label,
+  emptyLabel,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  emptyLabel: string;
+  value?: string;
+  options: { id: string; label: string }[];
+  onChange: (value?: string) => void;
+}) {
+  return (
+    <View style={s.selectorWrap}>
+      <Text style={s.selectorLabel}>{label}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.selectorOptions}>
+        <Pressable
+          style={[s.selectorPill, !value && s.selectorPillActive]}
+          onPress={() => onChange(undefined)}>
+          <Text style={[s.selectorText, !value && s.selectorTextActive]}>{emptyLabel}</Text>
+        </Pressable>
+        {options.map((option) => {
+          const selected = value === option.id;
+          return (
+            <Pressable
+              key={option.id}
+              style={[s.selectorPill, selected && s.selectorPillActive]}
+              onPress={() => onChange(option.id)}>
+              <Text style={[s.selectorText, selected && s.selectorTextActive]} numberOfLines={1}>
+                {option.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
 }
 
 export default function AdminBookingsScreen() {
   const [items, setItems] = useState<Booking[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
   const [activeFilter, setActiveFilter] = useState<FilterType>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [assignments, setAssignments] = useState<Record<string, { vehicleId?: string; hotelPartnerId?: string; supplierPartnerId?: string }>>({});
 
   const load = useCallback(() => {
-    api.get('/bookings')
-      .then((r) => setItems(r.data.data))
+    Promise.all([
+      api.get('/bookings'),
+      api.get('/vehicles'),
+      api.get('/partners'),
+    ])
+      .then(([bookingRes, vehicleRes, partnerRes]) => {
+        const loadedBookings: Booking[] = bookingRes.data.data;
+        const loadedVehicles: Vehicle[] = vehicleRes.data.data;
+        const loadedPartners: Partner[] = partnerRes.data.data;
+        setItems(loadedBookings);
+        setVehicles(loadedVehicles.filter((item) => item.status === 'AVAILABLE'));
+        setPartners(loadedPartners.filter((item) => item.status === 'ACTIVE'));
+        setAssignments((current) => {
+          const next = { ...current };
+          for (const booking of loadedBookings) {
+            if (!next[booking._id]) {
+              next[booking._id] = {
+                vehicleId: getRelationId(booking.vehicleId),
+                hotelPartnerId: getRelationId(booking.hotelPartnerId),
+                supplierPartnerId: getRelationId(booking.supplierPartnerId),
+              };
+            }
+          }
+          return next;
+        });
+      })
       .catch((e) => Alert.alert('Load failed', getApiError(e)));
   }, []);
 
   useFocusEffect(load);
 
-  async function setStatus(id: string, status: string) {
+  async function setStatus(id: string, status: string, includeAssignments = false) {
     try {
-      await api.put(`/bookings/${id}/status`, { status });
+      await api.put(`/bookings/${id}/status`, {
+        status,
+        ...(includeAssignments ? assignments[id] || {} : {}),
+      });
       load();
     } catch (error) {
       Alert.alert('Update failed', getApiError(error));
     }
   }
+
+  function updateAssignment(id: string, key: 'vehicleId' | 'hotelPartnerId' | 'supplierPartnerId', value?: string) {
+    setAssignments((current) => ({
+      ...current,
+      [id]: {
+        ...(current[id] || {}),
+        [key]: value,
+      },
+    }));
+  }
+
+  const hotels = partners.filter((item) => item.type === 'HOTEL');
+  const suppliers = partners.filter((item) => item.type === 'SUPPLIER' || item.type === 'ACTIVITY' || item.type === 'RESTAURANT');
 
   const filtered = items.filter(b => {
     if (!matchesFilter(b.status, activeFilter)) return false;
@@ -140,6 +225,7 @@ export default function AdminBookingsScreen() {
           </View>
         }
         renderItem={({ item }) => {
+          const vivaStatus = toVivaStatus(item.status);
           const statusColor = STATUS_COLORS[item.status] || { bg: MUTED + '20', text: MUTED };
           return (
             <View style={s.card}>
@@ -150,7 +236,7 @@ export default function AdminBookingsScreen() {
                 </View>
                 <View style={[s.statusBadge, { backgroundColor: statusColor.bg }]}>
                   <Text style={[s.statusText, { color: statusColor.text }]}>
-                    {item.status.replace(/_/g, ' ')}
+                    {vivaStatus}
                   </Text>
                 </View>
               </View>
@@ -182,12 +268,41 @@ export default function AdminBookingsScreen() {
                 </View>
               </View>
 
+              <View style={s.assignmentBox}>
+                <Text style={s.assignmentTitle}>OPTIONAL ASSIGNMENTS</Text>
+                <Text style={s.assignmentHelp}>Assign vehicle and hotel/supplier before confirming if needed.</Text>
+                <AssignmentSelector
+                  label="Vehicle"
+                  emptyLabel="No Vehicle"
+                  value={assignments[item._id]?.vehicleId}
+                  options={vehicles.map((vehicle) => ({
+                    id: vehicle._id,
+                    label: `${vehicle.model}${vehicle.plateNumber ? ` (${vehicle.plateNumber})` : ''}`,
+                  }))}
+                  onChange={(value) => updateAssignment(item._id, 'vehicleId', value)}
+                />
+                <AssignmentSelector
+                  label="Hotel Partner"
+                  emptyLabel="No Hotel"
+                  value={assignments[item._id]?.hotelPartnerId}
+                  options={hotels.map((partner) => ({ id: partner._id, label: partner.name }))}
+                  onChange={(value) => updateAssignment(item._id, 'hotelPartnerId', value)}
+                />
+                <AssignmentSelector
+                  label="Supplier"
+                  emptyLabel="No Supplier"
+                  value={assignments[item._id]?.supplierPartnerId}
+                  options={suppliers.map((partner) => ({ id: partner._id, label: `${partner.name} (${partner.type})` }))}
+                  onChange={(value) => updateAssignment(item._id, 'supplierPartnerId', value)}
+                />
+              </View>
+
               {/* Action Buttons */}
               {item.status !== 'COMPLETED' && item.status !== 'CANCELLED' ? (
                 <View style={s.actionRow}>
                   {item.status === 'NEW' || item.status === 'PAYMENT_PENDING' ? (
-                    <Pressable style={s.confirmBtn} onPress={() => setStatus(item._id, 'CONFIRMED')}>
-                      <Text style={s.confirmBtnText}>Confirm</Text>
+                    <Pressable style={s.confirmBtn} onPress={() => setStatus(item._id, 'CONFIRMED', true)}>
+                      <Text style={s.confirmBtnText}>Confirm + Assign</Text>
                     </Pressable>
                   ) : null}
                   {item.status === 'CONFIRMED' || item.status === 'ASSIGNED' || item.status === 'IN_PROGRESS' ? (
@@ -249,6 +364,17 @@ const s = StyleSheet.create({
   detailCard: { flex: 1, backgroundColor: INPUT_BG, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: BORDER },
   detailLabel: { color: MUTED, fontSize: 9, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
   detailValue: { color: DARK_TEXT, fontSize: 14, fontWeight: '700' },
+
+  assignmentBox: { backgroundColor: INPUT_BG, borderRadius: 12, borderWidth: 1, borderColor: BORDER, padding: 12, marginTop: 14 },
+  assignmentTitle: { color: GOLD, fontSize: 10, fontWeight: '800', letterSpacing: 1, marginBottom: 4 },
+  assignmentHelp: { color: MUTED, fontSize: 11, marginBottom: 10, lineHeight: 16 },
+  selectorWrap: { marginBottom: 10 },
+  selectorLabel: { color: DARK_TEXT, fontSize: 12, fontWeight: '700', marginBottom: 8 },
+  selectorOptions: { gap: 8, paddingRight: 12 },
+  selectorPill: { maxWidth: 210, borderRadius: 999, borderWidth: 1, borderColor: BORDER, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: DARK_CARD },
+  selectorPillActive: { backgroundColor: EMERALD, borderColor: '#0a4d3d' },
+  selectorText: { color: MUTED, fontSize: 11, fontWeight: '700' },
+  selectorTextActive: { color: GOLD },
 
   actionRow: { flexDirection: 'row', gap: 10, marginTop: 16, flexWrap: 'wrap' },
   confirmBtn: { backgroundColor: EMERALD, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 18 },

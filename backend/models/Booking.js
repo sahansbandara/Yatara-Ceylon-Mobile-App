@@ -11,6 +11,8 @@ const BookingSchema = new mongoose.Schema(
     type: { type: String, enum: Object.values(BookingTypes), default: BookingTypes.PACKAGE },
     packageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Package' },
     vehicleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vehicle' },
+    hotelPartnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' },
+    supplierPartnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' },
     pax: { type: Number, required: true, min: 1 },
     pickupLocation: String,
     dates: {
@@ -20,6 +22,7 @@ const BookingSchema = new mongoose.Schema(
     status: { type: String, enum: Object.values(BookingStatus), default: BookingStatus.NEW, index: true },
     notes: String,
     specialRequests: String,
+    adminNote: String,
     totalCost: { type: Number, default: 0 },
     paidAmount: { type: Number, default: 0 },
     remainingBalance: { type: Number, default: 0 },

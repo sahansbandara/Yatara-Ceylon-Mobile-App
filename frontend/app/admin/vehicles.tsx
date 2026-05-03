@@ -1,7 +1,8 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { getVehicleImage } from '@/constants/images';
 import { api, getApiError } from '@/lib/api';
 import { Vehicle } from '@/lib/types';
 import { appendImage, pickImage } from '@/lib/upload';
@@ -15,7 +16,7 @@ const GOLD = '#D4AF37';
 const INPUT_BG = '#121715';
 const EMERALD = '#063f32';
 
-const VEHICLE_TYPES = ['SUV', 'CAR', 'VAN', 'BUS', 'MINIBUS'];
+const VEHICLE_TYPES = ['SUV', 'SEDAN', 'VAN', 'BUS', 'LUXURY'];
 
 export default function ManageVehiclesScreen() {
   const [items, setItems] = useState<Vehicle[]>([]);
@@ -167,6 +168,7 @@ export default function ManageVehiclesScreen() {
               </View>
             ) : (
               <View>
+                <Image source={getVehicleImage(item)} style={s.cardImage} resizeMode="cover" />
                 <View style={s.cardTopRow}>
                   <View style={s.badge}><Text style={s.badgeText}>{item.type}</Text></View>
                   <View style={[s.badge, { backgroundColor: statusColor(item.status) + '20' }]}>
@@ -226,6 +228,7 @@ const s = StyleSheet.create({
   typePillTextActive: { color: GOLD },
 
   card: { backgroundColor: DARK_CARD, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: '#1D2522', marginBottom: 14 },
+  cardImage: { width: '100%', height: 140, borderRadius: 12, backgroundColor: INPUT_BG, marginBottom: 14 },
   cardTopRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   badge: { backgroundColor: INPUT_BG, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: BORDER },
   badgeText: { color: DARK_TEXT, fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },

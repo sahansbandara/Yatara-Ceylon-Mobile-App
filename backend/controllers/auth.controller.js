@@ -16,6 +16,11 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+const profileSchema = z.object({
+  name: z.string().min(2).optional(),
+  phone: z.string().min(7).optional(),
+});
+
 function publicUser(user) {
   return {
     id: user._id,
@@ -72,8 +77,23 @@ async function me(req, res) {
   res.json({ user: publicUser(req.user) });
 }
 
+async function updateProfile(req, res, next) {
+  try {
+    const data = profileSchema.parse(req.body);
+    const user = await User.findOneAndUpdate(
+      { _id: req.user._id, isDeleted: { $ne: true } },
+      data,
+      { new: true, runValidators: true }
+    );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ success: true, user: publicUser(user) });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function logout(_req, res) {
   res.json({ success: true });
 }
 
-module.exports = { register, login, me, logout };
+module.exports = { register, login, me, updateProfile, logout };
