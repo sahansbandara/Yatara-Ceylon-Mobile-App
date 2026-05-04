@@ -118,10 +118,8 @@ export default function AdminPackagesScreen() {
   }
 
   async function togglePublished(item: PackageItem) {
-    const form = new FormData();
-    form.append('isPublished', String(!item.isPublished));
     try {
-      await api.put(`/packages/${item._id}`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.put(`/packages/${item._id}`, { isPublished: item.isPublished === false });
       load();
     } catch (error) {
       Alert.alert('Publish update failed', getApiError(error));

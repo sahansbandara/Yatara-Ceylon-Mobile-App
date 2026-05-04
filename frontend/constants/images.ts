@@ -1,5 +1,7 @@
 import type { ImageSourcePropType } from 'react-native';
 
+import { API_URL } from '@/lib/api';
+
 /* Bundled image assets — sourced from the Yatara Ceylon website */
 
 export const HeroImages = {
@@ -62,7 +64,30 @@ function slugify(value?: string) {
     .replace(/^-|-$/g, '');
 }
 
+function getAbsoluteUploadUrl(value: string) {
+  if (!value) return undefined;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith('/uploads/')) {
+    return `${API_URL.replace(/\/api\/?$/, '')}${value}`;
+  }
+  return undefined;
+}
+
+function getUploadedImage(images?: string[]) {
+  const uploadUrl = images?.find((value) => value.includes('/uploads/') || value.startsWith('/uploads/'));
+  const absoluteUrl = uploadUrl ? getAbsoluteUploadUrl(uploadUrl) : undefined;
+  return absoluteUrl ? { uri: absoluteUrl } : undefined;
+}
+
+function getFirstRemoteImage(images?: string[]) {
+  const imageUrl = images?.map(getAbsoluteUploadUrl).find(Boolean);
+  return imageUrl ? { uri: imageUrl } : undefined;
+}
+
 export function getPackageImage(item: { title?: string; slug?: string; style?: string; images?: string[] }): ImageSourcePropType {
+  const uploaded = getUploadedImage(item.images);
+  if (uploaded) return uploaded;
+
   const slug = item.slug || slugify(item.title);
   const local = PackageImages[slug];
   if (local) return local;
@@ -79,12 +104,12 @@ export function getPackageImage(item: { title?: string; slug?: string; style?: s
     wellness: PackageImages['ayurveda-wellness-sanctuary'],
     wildlife: PackageImages['wildlife-coastal-luxe'],
   };
-  return styleFallbacks[style] || (item.images?.[0] ? { uri: item.images[0] } : HeroImages.dawn);
+  return styleFallbacks[style] || getFirstRemoteImage(item.images) || HeroImages.dawn;
 }
 
 export function getDestinationImage(item: { title?: string; slug?: string; images?: string[] }): ImageSourcePropType {
   const local = DestinationImages[item.slug || slugify(item.title)];
-  return local || (item.images?.[0] ? { uri: item.images[0] } : HeroImages.dawn);
+  return getUploadedImage(item.images) || local || getFirstRemoteImage(item.images) || HeroImages.dawn;
 }
 
 export function getVehicleImage(item: { type?: string; model?: string; images?: string[] }): ImageSourcePropType {
@@ -102,5 +127,5 @@ export function getVehicleImage(item: { type?: string; model?: string; images?: 
     suv: VehicleImages['city-suv'],
     van: VehicleImages['executive-van'],
   };
-  return typeFallbacks[type] || (item.images?.[0] ? { uri: item.images[0] } : VehicleImages['city-sedan']);
+  return getUploadedImage(item.images) || typeFallbacks[type] || getFirstRemoteImage(item.images) || VehicleImages['city-sedan'];
 }

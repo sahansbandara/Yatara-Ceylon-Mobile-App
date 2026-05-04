@@ -28,6 +28,9 @@ function normalizeBody(body) {
       data[key] = data[key].split(',').map((item) => item.trim()).filter(Boolean);
     }
   }
+  if (typeof data.isPublished === 'string') {
+    data.isPublished = data.isPublished.toLowerCase() === 'true';
+  }
   return data;
 }
 
