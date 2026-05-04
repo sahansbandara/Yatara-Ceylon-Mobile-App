@@ -134,7 +134,7 @@ Demo accounts:
 In `frontend/.env`:
 
 ```env
-EXPO_PUBLIC_API_URL=https://your-hosted-backend-url/api
+EXPO_PUBLIC_API_URL=https://yatara-ceylon-mobile-app.onrender.com/api
 ```
 
 For development only, simulator can use:

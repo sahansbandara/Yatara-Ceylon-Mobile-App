@@ -12,7 +12,7 @@
 >
 > In our Yatara Ceylon app, tour packages are the core product. I built the **full CRUD** — Create, Read, Update, Delete — for packages on both the backend API and the mobile admin screen.
 >
-> On the **backend**, the Package model in MongoDB stores fields like title, summary, duration, price range (priceMin and priceMax), highlights, images, and an itinerary array. I use **Zod** for input validation — for example, title must be at least 2 characters, prices must be non-negative numbers.
+> On the **backend**, the Package model in MongoDB stores fields like title, summary, duration, price (priceMin), highlights, images, and an itinerary array. I use **Zod** for input validation — for example, title must be at least 2 characters, prices must be non-negative numbers.
 >
 > I also implemented **slug generation** using the `slugify` library. When a package is created with the title "Hill Country Heritage", it automatically generates a URL-safe slug like `hill-country-heritage`. This is useful for unique identification.
 >
@@ -22,7 +22,7 @@
 >
 > **Delete operations use soft delete** — we set `isDeleted: true` instead of removing the MongoDB document. All list queries filter with `isDeleted: { $ne: true }` to hide deleted packages.
 >
-> On the **mobile side**, customers see packages in image-rich cards with gradient overlays on the Packages tab. They can tap a package to see full details — hero image, price range, highlights — and then create a booking from there. Admins can manage packages through the admin CRUD screen.
+> On the **mobile side**, customers see packages in image-rich cards with gradient overlays on the Packages tab. They can tap a package to see full details — hero image, price, highlights — and then create a booking from there. Admins can manage packages through the admin CRUD screen.
 >
 > Thank you."
 
@@ -71,8 +71,8 @@ const PackageSchema = new mongoose.Schema({
   type: { type: String, enum: ['journey', 'transfer'], default: 'journey', index: true },
   style: { type: String },                         // "Heritage", "Wildlife", etc.
   itinerary: [ItineraryDaySchema],                 // Array of day plans
-  priceMin: { type: Number, required: true, min: 0 },  // Minimum price per person
-  priceMax: { type: Number, required: true, min: 0 },  // Maximum price per person
+  priceMin: { type: Number, required: true, min: 0 },  // Price per person (shown in admin form)
+  priceMax: { type: Number, required: true, min: 0 },  // Auto-set to equal priceMin by the frontend
   images: [String],                                // Array of image URLs
   highlights: [String],                            // ["Private guide", "Boutique stays"]
   inclusions: [String],                            // What's included in the package
@@ -95,7 +95,7 @@ const packageSchema = z.object({
   summary: z.string().min(3),
   duration: z.string().min(1),
   priceMin: z.coerce.number().min(0),  // z.coerce converts string "500" to number 500
-  priceMax: z.coerce.number().min(0),
+  priceMax: z.coerce.number().min(0),  // Frontend auto-sends priceMax = priceMin
   images: z.array(z.string()).optional(),
   highlights: z.array(z.string()).optional(),
   isPublished: z.coerce.boolean().optional(),
@@ -195,7 +195,7 @@ async function deletePackage(req, res, next) {
 1. Open Packages tab → See list of packages with images
 2. Tap a package → See full details (hero image, price, highlights)
 3. Tap "Request Booking" → Shows booking form (connects to Sanujan's module)
-4. Go to Admin → Manage Packages → Create new package with title, price, image
+4. Go to Admin → Manage Packages → Create new package with title, summary, duration, price min, and image
 5. Show the new package appears in the customer list
 6. Toggle soft delete → Package disappears from list but exists in DB
 

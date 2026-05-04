@@ -19,8 +19,8 @@ Member 6: IT24101070 - Muthubadiwila M.W.H.A.  - Supplier / Partner Management
 
 03). Deployment Details
 ------------------------------------------------------------
-Backend URL: https://yatara-mobile-api.onrender.com/api
-Health Check: https://yatara-mobile-api.onrender.com/api/health
+Backend URL: https://yatara-ceylon-mobile-app.onrender.com/api
+Health Check: https://yatara-ceylon-mobile-app.onrender.com/api/health
 
 Mobile App:
   Framework  : React Native 0.81 + Expo SDK 54
@@ -35,9 +35,3 @@ Backend:
 Database:
   Provider   : MongoDB Atlas
   DB Name    : yatara-mobile
-
-04). Submission Note
-------------------------------------------------------------
-This ZIP contains documentation only.
-All source code is available in the GitHub repository above.
-Do NOT include source code in the submission ZIP.

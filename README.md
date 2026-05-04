@@ -442,7 +442,7 @@ CORS_ORIGIN=*
 
 **Frontend** (`frontend/.env`):
 ```env
-EXPO_PUBLIC_API_URL=https://your-backend.onrender.com/api
+EXPO_PUBLIC_API_URL=https://yatara-ceylon-mobile-app.onrender.com/api
 ```
 
 ### Step 5: Seed the Database

@@ -113,13 +113,13 @@ REQUIRE_MOBILE_DB=true
 JWT_SECRET=long-random-secret
 JWT_EXPIRES_IN=7d
 CORS_ORIGIN=*
-PUBLIC_API_URL=https://hosted-api-url
+PUBLIC_API_URL=https://yatara-ceylon-mobile-app.onrender.com
 ```
 
 Mobile production API URL:
 
 ```env
-EXPO_PUBLIC_API_URL=https://hosted-api-url/api
+EXPO_PUBLIC_API_URL=https://yatara-ceylon-mobile-app.onrender.com/api
 ```
 
 ## 10. Final Demo Script
@@ -136,4 +136,3 @@ EXPO_PUBLIC_API_URL=https://hosted-api-url/api
 10. Update booking status.
 11. Show hosted API health endpoint.
 12. Show MongoDB Atlas `yatara-mobile` records.
-

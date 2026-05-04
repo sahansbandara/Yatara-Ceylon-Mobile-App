@@ -2,7 +2,7 @@
 
 ## Group: WE_IT_02 — Yatara Ceylon Mobile App
 
-**Base URL:** `https://yatara-mobile-api.onrender.com/api`
+**Base URL:** `https://yatara-ceylon-mobile-app.onrender.com/api`
 **Authentication:** JWT Bearer Token in `Authorization: Bearer <token>` header
 
 ---

@@ -96,8 +96,8 @@ docs/submission/README.txt
 Before submission, update:
 
 - `Group Number: XX`
-- `Backend URL: https://your-hosted-backend-url/api`
-- `Health Check URL: https://your-hosted-backend-url/api/health`
+- `Backend URL: https://yatara-ceylon-mobile-app.onrender.com/api`
+- `Health Check URL: https://yatara-ceylon-mobile-app.onrender.com/api/health`
 
 ## Team Responsibility
 

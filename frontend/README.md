@@ -28,7 +28,7 @@ EXPO_PUBLIC_API_URL=http://192.168.1.10:5000/api
 For final viva/demo, use the hosted backend:
 
 ```env
-EXPO_PUBLIC_API_URL=https://your-hosted-backend-url/api
+EXPO_PUBLIC_API_URL=https://yatara-ceylon-mobile-app.onrender.com/api
 ```
 
 Restart Expo after changing `.env`.
