@@ -3,17 +3,22 @@ const { z } = require('zod');
 const Package = require('../models/Package');
 const { mergeUploadedImage } = require('../utils/uploadUrl');
 
+const nonNegativeInt = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? Number.NaN : value),
+  z.coerce.number().int().min(0)
+);
+
 const packageSchema = z.object({
   title: z.string().min(2),
   slug: z.string().optional(),
   summary: z.string().min(3),
   fullDescription: z.string().optional(),
-  duration: z.string().min(1),
-  durationDays: z.coerce.number().min(1).optional(),
+  duration: z.coerce.number().int().min(1).max(20).transform(String),
+  durationDays: z.coerce.number().int().min(1).max(20).optional(),
   type: z.enum(['journey', 'transfer']).default('journey'),
   style: z.string().optional(),
-  priceMin: z.coerce.number().min(0),
-  priceMax: z.coerce.number().min(0),
+  priceMin: nonNegativeInt,
+  priceMax: nonNegativeInt,
   images: z.array(z.string()).optional(),
   highlights: z.array(z.string()).optional(),
   inclusions: z.array(z.string()).optional(),
@@ -30,6 +35,9 @@ function normalizeBody(body) {
   }
   if (typeof data.isPublished === 'string') {
     data.isPublished = data.isPublished.toLowerCase() === 'true';
+  }
+  if (data.duration && !data.durationDays) {
+    data.durationDays = data.duration;
   }
   return data;
 }

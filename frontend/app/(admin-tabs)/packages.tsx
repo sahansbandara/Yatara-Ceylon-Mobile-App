@@ -17,6 +17,24 @@ const GOLD = '#D4AF37';
 const INPUT_BG = '#121715';
 const EMERALD = '#063f32';
 
+function digitsOnly(value: string) {
+  return value.replace(/\D/g, '');
+}
+
+function getDurationNumber(value: string) {
+  const match = value.match(/\d+/);
+  return match ? match[0] : '';
+}
+
+function isValidDuration(value: string) {
+  const number = Number(value);
+  return Number.isInteger(number) && number >= 1 && number <= 20;
+}
+
+function isValidPrice(value: string) {
+  return /^\d+$/.test(value) && Number.isFinite(Number(value));
+}
+
 export default function AdminPackagesScreen() {
   const [items, setItems] = useState<PackageItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,7 +42,7 @@ export default function AdminPackagesScreen() {
 
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
-  const [duration, setDuration] = useState('3 Days');
+  const [duration, setDuration] = useState('3');
   const [priceMin, setPriceMin] = useState('50000');
   const [image, setImage] = useState<{ uri: string; name: string; type: string } | null>(null);
 
@@ -45,7 +63,7 @@ export default function AdminPackagesScreen() {
     setEditingId(item._id);
     setEditTitle(item.title);
     setEditSummary(item.summary);
-    setEditDuration(item.duration);
+    setEditDuration(getDurationNumber(item.duration));
     setEditPrice(String(item.priceMin));
     setEditImage(null);
   }
@@ -60,15 +78,19 @@ export default function AdminPackagesScreen() {
       Alert.alert('Missing details', 'Enter a title and summary.');
       return;
     }
-    if (!Number.isFinite(Number(priceMin)) || Number(priceMin) < 0) {
+    if (!isValidPrice(priceMin)) {
       Alert.alert('Invalid price', 'Enter a valid LKR price.');
+      return;
+    }
+    if (!isValidDuration(duration)) {
+      Alert.alert('Invalid duration', 'Enter a number between 1 and 20.');
       return;
     }
     const form = new FormData();
     form.append('title', title);
     form.append('summary', summary);
     form.append('duration', duration);
-    form.append('durationDays', '3');
+    form.append('durationDays', duration);
     form.append('priceMin', priceMin);
     form.append('priceMax', priceMin);
     form.append('isPublished', 'true');
@@ -87,8 +109,12 @@ export default function AdminPackagesScreen() {
       Alert.alert('Missing title', 'Title must be at least 2 characters.');
       return;
     }
-    if (!Number.isFinite(Number(editPrice)) || Number(editPrice) < 0) {
+    if (!isValidPrice(editPrice)) {
       Alert.alert('Invalid price', 'Enter a valid price.');
+      return;
+    }
+    if (!isValidDuration(editDuration)) {
+      Alert.alert('Invalid duration', 'Enter a number between 1 and 20.');
       return;
     }
     const form = new FormData();
@@ -169,8 +195,8 @@ export default function AdminPackagesScreen() {
                 <Text style={s.formTitle}>Add New Package</Text>
                 <DarkField label="Title" value={title} onChangeText={setTitle} placeholder="Package name" />
                 <DarkField label="Summary" value={summary} onChangeText={setSummary} placeholder="Brief description" multiline />
-                <DarkField label="Duration" value={duration} onChangeText={setDuration} placeholder="e.g. 3 Days" />
-                <DarkField label="Price Min (LKR)" value={priceMin} onChangeText={setPriceMin} placeholder="50000" keyboardType="numeric" />
+                <DarkField label="Duration" value={duration} onChangeText={(value) => setDuration(digitsOnly(value))} placeholder="1 to 20" keyboardType="numeric" />
+                <DarkField label="Price Min (LKR)" value={priceMin} onChangeText={(value) => setPriceMin(digitsOnly(value))} placeholder="50000" keyboardType="numeric" />
                 <Pressable
                   style={[s.secondaryBtn, image && { borderColor: '#10b981' }]}
                   onPress={async () => setImage(await pickImage())}>
@@ -209,8 +235,8 @@ export default function AdminPackagesScreen() {
                 <Text style={s.formTitle}>Edit Package</Text>
                 <DarkField label="Title" value={editTitle} onChangeText={setEditTitle} />
                 <DarkField label="Summary" value={editSummary} onChangeText={setEditSummary} multiline />
-                <DarkField label="Duration" value={editDuration} onChangeText={setEditDuration} />
-                <DarkField label="Price Min (LKR)" value={editPrice} onChangeText={setEditPrice} keyboardType="numeric" />
+                <DarkField label="Duration" value={editDuration} onChangeText={(value) => setEditDuration(digitsOnly(value))} placeholder="1 to 20" keyboardType="numeric" />
+                <DarkField label="Price Min (LKR)" value={editPrice} onChangeText={(value) => setEditPrice(digitsOnly(value))} keyboardType="numeric" />
                 <Pressable
                   style={[s.secondaryBtn, editImage && { borderColor: '#10b981' }]}
                   onPress={async () => setEditImage(await pickImage())}>
@@ -238,7 +264,7 @@ export default function AdminPackagesScreen() {
                 <View style={s.cardInner}>
                   <Text style={s.cardTitle}>{item.title}</Text>
                   <View style={s.metaRow}>
-                    <Text style={s.cardSub}>{item.duration} · LKR {item.priceMin?.toLocaleString()}</Text>
+                    <Text style={s.cardSub}>{item.duration} days · LKR {item.priceMin?.toLocaleString()}</Text>
                     <View style={[s.publishBadge, item.isPublished === false && s.draftBadge]}>
                       <Text style={[s.publishText, item.isPublished === false && s.draftText]}>
                         {item.isPublished === false ? 'Draft' : 'Published'}
