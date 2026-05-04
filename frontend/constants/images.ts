@@ -66,9 +66,20 @@ function slugify(value?: string) {
 
 function getAbsoluteUploadUrl(value: string) {
   if (!value) return undefined;
-  if (/^https?:\/\//i.test(value)) return value;
+  const apiBase = API_URL.replace(/\/api\/?$/, '');
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const url = new URL(value);
+      if ((url.hostname === 'localhost' || url.hostname === '127.0.0.1') && url.pathname.startsWith('/uploads/')) {
+        return `${apiBase}${url.pathname}`;
+      }
+    } catch {
+      return value;
+    }
+    return value;
+  }
   if (value.startsWith('/uploads/')) {
-    return `${API_URL.replace(/\/api\/?$/, '')}${value}`;
+    return `${apiBase}${value}`;
   }
   return undefined;
 }

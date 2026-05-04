@@ -26,6 +26,11 @@ function getDurationNumber(value: string) {
   return match ? match[0] : '';
 }
 
+function formatDuration(value: string) {
+  const duration = getDurationNumber(value);
+  return duration ? `${duration} days` : 'Not set';
+}
+
 function isValidDuration(value: string) {
   const number = Number(value);
   return Number.isInteger(number) && number >= 1 && number <= 20;
@@ -264,7 +269,7 @@ export default function AdminPackagesScreen() {
                 <View style={s.cardInner}>
                   <Text style={s.cardTitle}>{item.title}</Text>
                   <View style={s.metaRow}>
-                    <Text style={s.cardSub}>{item.duration} days · LKR {item.priceMin?.toLocaleString()}</Text>
+                    <Text style={s.cardSub}>{formatDuration(item.duration)} · LKR {item.priceMin?.toLocaleString()}</Text>
                     <View style={[s.publishBadge, item.isPublished === false && s.draftBadge]}>
                       <Text style={[s.publishText, item.isPublished === false && s.draftText]}>
                         {item.isPublished === false ? 'Draft' : 'Published'}

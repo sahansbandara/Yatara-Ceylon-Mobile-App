@@ -1,6 +1,11 @@
 function getFileUrl(req, file) {
   if (!file) return undefined;
-  const publicBase = process.env.PUBLIC_API_URL || `${req.protocol}://${req.get('host')}`;
+  const forwardedProto = req.get('x-forwarded-proto')?.split(',')[0]?.trim();
+  const requestBase = `${forwardedProto || req.protocol}://${req.get('host')}`;
+  const configuredBase = process.env.PUBLIC_API_URL;
+  const publicBase = configuredBase && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(configuredBase)
+    ? configuredBase
+    : requestBase;
   return `${publicBase.replace(/\/$/, '')}/uploads/${file.filename}`;
 }
 
